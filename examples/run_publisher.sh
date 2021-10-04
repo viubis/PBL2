@@ -1,0 +1,1 @@
+gcc examples/publisher.c -o examples/publisher -lmosquitto && ./examples/publisher
