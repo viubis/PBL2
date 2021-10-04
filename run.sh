@@ -1,0 +1,1 @@
+gcc app.c -o app -lmosquitto && ./app
