@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "./paho.mqtt.c/src/MQTTClient.h"
+#include "MQTTClient.h"
 
 #define ADDRESS     "tcp://localhost:1883"
 #define PUBID       "ExampleClientPub"
