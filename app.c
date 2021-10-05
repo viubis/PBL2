@@ -8,8 +8,8 @@
 #define SUBID       "ExampleClientSub"
 #define ID          "RASPBERRY"
 
-#define TOPIC       "LIGHT"
-#define PAYLOAD     "Hello World!"
+// #define TOPIC       "LIGHT"
+// #define PAYLOAD     "Hello World!"
 #define QOS         2
 #define TIMEOUT     10000L
 #define KEEP_ALIVE  60
@@ -43,18 +43,31 @@ void connlost(void *context, char *cause){
     printf("     cause: %s\n", cause);
 }
 
-void sendMessage(){
-
+void publishMessage(MQTTClient client, MQTTClient_deliveryToken * token, 
+                  char *topic, char *message){
+  MQTTClient_message pubmsg = MQTTClient_message_initializer;
+  pubmsg.payload = message;
+  pubmsg.payloadlen = strlen(message);
+  pubmsg.qos = QOS;
+  pubmsg.retained = 0;
+  deliveredtoken = 0;
+  MQTTClient_publishMessage(client, topic, &pubmsg, token);
+  // printf("Waiting for publication of %s\n"
+  //         "on topic %s for client with ClientID: %s\n",
+  //         message, topic, ID);
+  printf("Message sent %s: %s", topic, message);
+      
 }
 
 int main() {
   MQTTClient client;
   MQTTClient_connectOptions conn_opts = MQTTClient_connectOptions_initializer;
 
-  MQTTClient_message pubmsg = MQTTClient_message_initializer;
   MQTTClient_deliveryToken token;
   int rc;
-  int ch;
+  // int ch;
+  // char * ch;
+  char ch[512];
 
   MQTTClient_create(&client, ADDRESS, ID,
       MQTTCLIENT_PERSISTENCE_NONE, NULL);
@@ -69,43 +82,17 @@ int main() {
     exit(EXIT_FAILURE);
   }
 
-  // printf("Subscribing to topic %s\nfor client %s using QoS%d\n\n"
-  //          "Press Q<Enter> to quit\n\n", TOPIC, CLIENTID, QOS);
-  //   MQTTClient_subscribe(client, TOPIC, QOS);
-  //   do
-  //   {
-  //       ch = getchar();
-  //   } while(ch!='Q' && ch != 'q');
-
-    // pubmsg.payload = PAYLOAD;
-    // pubmsg.payloadlen = strlen(PAYLOAD);
-    // pubmsg.qos = QOS;
-    // pubmsg.retained = 0;
-    // deliveredtoken = 0;
-    // MQTTClient_publishMessage(client, TOPIC, &pubmsg, &token);
-    // printf("Waiting for publication of %s\n"
-    //         "on topic %s for client with ClientID: %s\n",
-    //         PAYLOAD, TOPIC, CLIENTID);
-    // while(deliveredtoken != token);
-
-  MQTTClient_subscribe(client, TOPIC, QOS);
+  MQTTClient_subscribe(client, "JARDIM/LUZ", QOS);
 
   do{
-      ch = getchar();
-      if(ch!='Q' && ch != 'q'){
-        pubmsg.payload = PAYLOAD;
-        pubmsg.payloadlen = strlen(PAYLOAD);
-        pubmsg.qos = QOS;
-        pubmsg.retained = 0;
-        deliveredtoken = 0;
-        MQTTClient_publishMessage(client, TOPIC, &pubmsg, &token);
-        printf("Waiting for publication of %s\n"
-                "on topic %s for client with ClientID: %s\n",
-                PAYLOAD, TOPIC, ID);
-      }
-  } while(ch!='Q' && ch != 'q' && deliveredtoken != token);
+      // ch = getchar();
+      scanf("%s", ch);
 
-  
+      if(strcmp("q",ch) != 0){
+        publishMessage(client, &token, "JARDIM/LUZ", ch);
+      }
+
+  } while(strcmp("q",ch) != 0); 
 
   MQTTClient_disconnect(client, 10000);
   MQTTClient_destroy(&client);
