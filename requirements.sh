@@ -1,1 +1,2 @@
-apt-get update -y && apt-get upgrade -y && apt-get install mosquitto mosquitto-clients libmosquitto-dev -y
+# apt-get update -y && apt-get upgrade -y && apt-get install mosquitto mosquitto-clients libmosquitto-dev -y
+apt-get update -y && apt-get upgrade -y && apt-get install libssl-dev doxygen && git clone https://github.com/eclipse/paho.mqtt.c.git && cd paho.mqtt.c && make && make html && make install

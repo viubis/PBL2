@@ -1,53 +1,113 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <mosquitto.h>
+#include <string.h>
+#include "./paho.mqtt.c/src/MQTTClient.h"
 
-void on_connect(struct mosquitto *mosq, void *obj, int rc) {
-	printf("ID: %d\n", * (int *) obj);
-	if(rc) {
-		printf("Error with result code: %d\n", rc);
-		exit(-1);
-	}
-	mosquitto_subscribe(mosq, NULL, "test/t1", 0);
+#define ADDRESS     "tcp://localhost:1883"
+#define PUBID       "ExampleClientPub"
+#define SUBID       "ExampleClientSub"
+#define ID          "RASPBERRY"
+
+#define TOPIC       "LIGHT"
+#define PAYLOAD     "Hello World!"
+#define QOS         2
+#define TIMEOUT     10000L
+#define KEEP_ALIVE  60
+
+volatile MQTTClient_deliveryToken deliveredtoken;
+
+void delivered(void *context, MQTTClient_deliveryToken dt){
+    printf("Message with token value %d delivery confirmed\n", dt);
+    deliveredtoken = dt;
 }
 
-void on_message(struct mosquitto *mosq, void *obj, const struct mosquitto_message *msg) {
-	printf("New message with topic %s: %s\n", msg->topic, (char *) msg->payload);
+int msgarrvd(void *context, char *topicName, int topicLen, MQTTClient_message *message) {
+    int i;
+    char* payloadptr;
+    printf("Message arrived\n");
+    printf("     topic: %s\n", topicName);
+    printf("   message: ");
+    payloadptr = message->payload;
+    for(i=0; i<message->payloadlen; i++)
+    {
+        putchar(*payloadptr++);
+    }
+    putchar('\n');
+    MQTTClient_freeMessage(&message);
+    MQTTClient_free(topicName);
+    return 1;
 }
 
-void mosquitto_close(struct mosquitto *mosq){
-  mosquitto_disconnect(mosq);
-	mosquitto_destroy(mosq);
-	mosquitto_lib_cleanup();
+void connlost(void *context, char *cause){
+    printf("\nConnection lost\n");
+    printf("     cause: %s\n", cause);
 }
 
-int main(){
-  /*
-    MÓDULO PARA RESTAURAR A PERSISTENCIA DO SISTEMA
-    PEGAR DE UM BANCO DE DADOS
-  */
-	int rc, id=12;
+void sendMessage(){
 
-	mosquitto_lib_init();
+}
 
-	struct mosquitto *mosq;
+int main() {
+  MQTTClient client;
+  MQTTClient_connectOptions conn_opts = MQTTClient_connectOptions_initializer;
 
-	mosq = mosquitto_new("subscribe-test", true, &id);
-	mosquitto_connect_callback_set(mosq, on_connect);
-	mosquitto_message_callback_set(mosq, on_message);
-	
-	rc = mosquitto_connect(mosq, "localhost", 1883, 10);
-	if(rc) {
-		printf("Could not connect to Broker with return code %d\n", rc);
-		return -1;
-	}
+  MQTTClient_message pubmsg = MQTTClient_message_initializer;
+  MQTTClient_deliveryToken token;
+  int rc;
+  int ch;
 
-	mosquitto_loop_start(mosq);
-	printf("Press Enter to quit...\n");
-	getchar();
-	mosquitto_loop_stop(mosq, true);
+  MQTTClient_create(&client, ADDRESS, ID,
+      MQTTCLIENT_PERSISTENCE_NONE, NULL);
 
-	mosquitto_close(mosq);
+  conn_opts.keepAliveInterval = KEEP_ALIVE;
+  conn_opts.cleansession = 1;
 
-	return 0;
+  MQTTClient_setCallbacks(client, NULL, connlost, msgarrvd, delivered);
+
+  if ((rc = MQTTClient_connect(client, &conn_opts)) != MQTTCLIENT_SUCCESS) {
+    printf("Failed to connect, return code %d\n", rc);
+    exit(EXIT_FAILURE);
+  }
+
+  // printf("Subscribing to topic %s\nfor client %s using QoS%d\n\n"
+  //          "Press Q<Enter> to quit\n\n", TOPIC, CLIENTID, QOS);
+  //   MQTTClient_subscribe(client, TOPIC, QOS);
+  //   do
+  //   {
+  //       ch = getchar();
+  //   } while(ch!='Q' && ch != 'q');
+
+    // pubmsg.payload = PAYLOAD;
+    // pubmsg.payloadlen = strlen(PAYLOAD);
+    // pubmsg.qos = QOS;
+    // pubmsg.retained = 0;
+    // deliveredtoken = 0;
+    // MQTTClient_publishMessage(client, TOPIC, &pubmsg, &token);
+    // printf("Waiting for publication of %s\n"
+    //         "on topic %s for client with ClientID: %s\n",
+    //         PAYLOAD, TOPIC, CLIENTID);
+    // while(deliveredtoken != token);
+
+  MQTTClient_subscribe(client, TOPIC, QOS);
+
+  do{
+      ch = getchar();
+      if(ch!='Q' && ch != 'q'){
+        pubmsg.payload = PAYLOAD;
+        pubmsg.payloadlen = strlen(PAYLOAD);
+        pubmsg.qos = QOS;
+        pubmsg.retained = 0;
+        deliveredtoken = 0;
+        MQTTClient_publishMessage(client, TOPIC, &pubmsg, &token);
+        printf("Waiting for publication of %s\n"
+                "on topic %s for client with ClientID: %s\n",
+                PAYLOAD, TOPIC, ID);
+      }
+  } while(ch!='Q' && ch != 'q' && deliveredtoken != token);
+
+  
+
+  MQTTClient_disconnect(client, 10000);
+  MQTTClient_destroy(&client);
+  return rc;
 }

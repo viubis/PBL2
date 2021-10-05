@@ -1,1 +1,1 @@
-gcc app.c -o app -lmosquitto && ./app
+gcc app.c -o app -lpaho-mqtt3c -Wall && ./app

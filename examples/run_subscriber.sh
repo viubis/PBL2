@@ -1,1 +1,0 @@
-gcc examples/subscriber.c -o examples/subscriber -lmosquitto && ./examples/subscriber
