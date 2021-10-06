@@ -16,12 +16,12 @@
 
 volatile MQTTClient_deliveryToken deliveredtoken;
 
-void delivered(void *context, MQTTClient_deliveryToken dt){
+void onMessageDelivered(void *context, MQTTClient_deliveryToken dt){
     printf("Message with token value %d delivery confirmed\n", dt);
     deliveredtoken = dt;
 }
 
-int msgarrvd(void *context, char *topicName, int topicLen, MQTTClient_message *message) {
+int onMessageArrived(void *context, char *topicName, int topicLen, MQTTClient_message *message) {
     int i;
     char* payloadptr;
     printf("Message arrived\n");
@@ -38,7 +38,7 @@ int msgarrvd(void *context, char *topicName, int topicLen, MQTTClient_message *m
     return 1;
 }
 
-void connlost(void *context, char *cause){
+void onConnectionLost(void *context, char *cause){
     printf("\nConnection lost\n");
     printf("     cause: %s\n", cause);
 }
@@ -52,49 +52,58 @@ void publishMessage(MQTTClient client, MQTTClient_deliveryToken * token,
   pubmsg.retained = 0;
   deliveredtoken = 0;
   MQTTClient_publishMessage(client, topic, &pubmsg, token);
-  // printf("Waiting for publication of %s\n"
-  //         "on topic %s for client with ClientID: %s\n",
-  //         message, topic, ID);
-  printf("Message sent %s: %s", topic, message);
-      
+  printf("Waiting for publication -- %s: %s\n", topic, message);
+}
+
+void subscribeTo(MQTTClient client){
+  MQTTClient_subscribe(client, "JARDIM/LUZ", QOS);
+}
+
+void finishConnection(MQTTClient client){
+  MQTTClient_disconnect(client, 10000);
+  MQTTClient_destroy(&client);
 }
 
 int main() {
   MQTTClient client;
   MQTTClient_connectOptions conn_opts = MQTTClient_connectOptions_initializer;
-
   MQTTClient_deliveryToken token;
-  int rc;
-  // int ch;
-  // char * ch;
-  char ch[512];
 
-  MQTTClient_create(&client, ADDRESS, ID,
+  int rc;
+  char buffer[512];
+
+  rc = MQTTClient_create(&client, ADDRESS, ID,
       MQTTCLIENT_PERSISTENCE_NONE, NULL);
+
+	if(rc != MQTTCLIENT_SUCCESS){
+		printf("Faild creating client: %d\n", rc);
+		exit(EXIT_FAILURE);
+	}
 
   conn_opts.keepAliveInterval = KEEP_ALIVE;
   conn_opts.cleansession = 1;
+  // conn_opts.
 
-  MQTTClient_setCallbacks(client, NULL, connlost, msgarrvd, delivered);
+  MQTTClient_setCallbacks(client, NULL, onConnectionLost, onMessageArrived, onMessageDelivered);
 
-  if ((rc = MQTTClient_connect(client, &conn_opts)) != MQTTCLIENT_SUCCESS) {
+  rc = MQTTClient_connect(client, &conn_opts);
+  if (rc != MQTTCLIENT_SUCCESS) {
     printf("Failed to connect, return code %d\n", rc);
     exit(EXIT_FAILURE);
   }
 
-  MQTTClient_subscribe(client, "JARDIM/LUZ", QOS);
+  subscribeTo(client);
 
   do{
       // ch = getchar();
-      scanf("%s", ch);
+      scanf("%s", buffer);
 
-      if(strcmp("q",ch) != 0){
-        publishMessage(client, &token, "JARDIM/LUZ", ch);
+      if(strcmp("q", buffer) != 0){
+        publishMessage(client, &token, "JARDIM/LUZ", buffer);
       }
 
-  } while(strcmp("q",ch) != 0); 
+  } while(strcmp("q", buffer) != 0); 
 
-  MQTTClient_disconnect(client, 10000);
-  MQTTClient_destroy(&client);
+  finishConnection(client);
   return rc;
 }
