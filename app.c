@@ -3,13 +3,13 @@
 #include <string.h>
 #include "MQTTClient.h"
 
-#define ADDRESS     "tcp://localhost:1883"
-#define PUBID       "ExampleClientPub"
-#define SUBID       "ExampleClientSub"
+// #define ADDRESS     "tcp://localhost:1883"
+//...................................................................
+//... ADRESS
+//...................................................................
+#define ADDRESS     ""
 #define ID          "RASPBERRY"
 
-// #define TOPIC       "LIGHT"
-// #define PAYLOAD     "Hello World!"
 #define QOS         2
 #define TIMEOUT     10000L
 #define KEEP_ALIVE  60
@@ -28,9 +28,8 @@ int onMessageArrived(void *context, char *topicName, int topicLen, MQTTClient_me
     printf("     topic: %s\n", topicName);
     printf("   message: ");
     payloadptr = message->payload;
-    for(i=0; i<message->payloadlen; i++)
-    {
-        putchar(*payloadptr++);
+    for(i=0; i<message->payloadlen; i++){
+      putchar(*payloadptr++);
     }
     putchar('\n');
     MQTTClient_freeMessage(&message);
@@ -76,15 +75,33 @@ int main() {
       MQTTCLIENT_PERSISTENCE_NONE, NULL);
 
 	if(rc != MQTTCLIENT_SUCCESS){
-		printf("Faild creating client: %d\n", rc);
+		printf("Faild creating client, return code %d\n", rc);
 		exit(EXIT_FAILURE);
 	}
 
+  rc = MQTTClient_setCallbacks(client, NULL, onConnectionLost, onMessageArrived, onMessageDelivered);
+  if (rc != MQTTCLIENT_SUCCESS) {
+    printf("Faild setting callbacks, return code %d\n", rc);
+    exit(EXIT_FAILURE);
+  }
+
+  MQTTClient_SSLOptions ssl_opts = MQTTClient_SSLOptions_initializer;
+  ssl_opts.verify = 1;
+  ssl_opts.CApath = NULL;
+  ssl_opts.keyStore = NULL;
+  ssl_opts.trustStore = NULL;
+  ssl_opts.privateKey = NULL;
+  ssl_opts.privateKeyPassword = NULL;
+  ssl_opts.enabledCipherSuites = NULL;
+
+  conn_opts.ssl = &ssl_opts;
   conn_opts.keepAliveInterval = KEEP_ALIVE;
   conn_opts.cleansession = 1;
-  // conn_opts.
-
-  MQTTClient_setCallbacks(client, NULL, onConnectionLost, onMessageArrived, onMessageDelivered);
+  //...................................................................
+  //... USERNAME E PASSWORD
+  //...................................................................
+  conn_opts.username =
+  conn_opts.password = 
 
   rc = MQTTClient_connect(client, &conn_opts);
   if (rc != MQTTCLIENT_SUCCESS) {
