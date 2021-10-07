@@ -186,19 +186,99 @@ int alterarOperacaoAr_function(int gpio){
 	} return 0;
 }
 
-int main()
-{
+// ................................................................................
+// ......ESTADOS
+// ................................................................................
+typedef struct {
+	char estado_atual;
+	char temp_atual;
+	char temp_min;
+	char temp_max;
+	char ligar_em;
+	char desligar_em; 
+} AC;
+
+typedef struct {
+	char ativo;
+	char ligar_em;
+	char desligar_em; 
+} Alarme;
+
+typedef struct {} Jardim;
+
+typedef struct {
+	char estado_atual;
+	char ligar_em;
+	char desligar_em; 
+} LuzInterna;
+typedef struct {
+	AC ac;
+	Alarme alarme;
+	Jardim jardim;
+	LuzInterna luzInterna;
+} Components;
+
+// typedef struct {
+// 	char ac_valor;
+// 	char ac_temp_min;
+// 	char ac_temp_max;
+// 	char ac_ligar_em;
+// 	char ac_desligar_em; 
+// 	char interno_ligar_em;
+// } Components;
+
+void tratar_mensagem(Components *comp){
+	rc = mensagem_recebida()
+	switch (1){
+	case "LIGAR_EM":
+		comp.ac_ligar_em = "djalskdjlaksj"
+		break;
+	
+	default:
+		break;
+	}
+}
+
+int main(){
+
+	//PRIMEIRO TEM QUE STARTAR OS ESTADOS DO SISTEMA, OU SEJA
+	//PRIMEIRO CHECA SE TEM VALORES SALVOS (BANCO OU QUALQUER COISA QUE A GENTE FOR USAR)
+	//SENÃO TEM VALOR SALVO, SETA OS ESTADOS COM VALORES DEFAULT
+	Components comp;
+	//Você pode acessar os elementos da struct dessa maneira:
+	// comp.ac.desligar_em;
+	// comp.alarme...
 	
 	int horaAtual = 10, temperaturaAr = 16, temperaturaExterna = 0, arOperacaoMax = 20, arOperacaoMin = 5;
     //typedef enum {false=0, true=1} bool ;
 	bool temPessoas = false, portaJarnelaAbertas = false, alterarOperacaoAr = false;
-    printf("%d",arOperacaoMin_function(0));
-    alarme(temPessoas, portaJarnelaAbertas);
-    iluminacaoAmbientesInternos(temPessoas);
-    iluminacaoGaragem(horaAtual, temPessoas);
-    iluminacaoJardim(horaAtual);
-    arCondicionado(temperaturaAr, temperaturaExterna, temPessoas, alterarOperacaoAr, arOperacaoMax, arOperacaoMin);
-    return 0;
+
+	// tratar_mensagem(&comp) // MENSAGENS QUE CHEGAREM DOS SUBSCRIBERS
+	// EXEMPLOS DE COMO PODE SALVAR AS VARIÁVEIS 
+	// ac_tempo = "de 3 horas até 5 horas";	//ESTADO MAIS GENÉRICO X
+	// ac_ligar_em = "3"										//ESTADO MENOS GENÉRICO V
+	// ac_desligar_em = "5"									//ESTADO MENOS GENÉRICO V
+	// PORQUE DEPOIS VAI PASSAR EM UMA FUNÇÃO TIPO ASSIM
+	// tratar_mensagem(ac_ligar_em, ac_desligar_em, interno_ligar_em, ... );
+	// ENTÃO PODE MANDAR COM STRUCT
+	// tratar_mensagem(comopnentes);
+
+	// QUANDO FOR PARA UMA FUNÇÃO, PODE PASSAR A STRUCT E MANIPULAR DENTRO DELA
+	// void ac(Components *comp){
+	// 	comp.ac.ligar_em
+	// 	if(pessoa){
+	//		comp.ac.estado_atual = "ON"
+	//		return;
+	// 	}
+	// }
+
+	printf("%d",arOperacaoMin_function(0));
+	alarme(temPessoas, portaJarnelaAbertas);
+	iluminacaoAmbientesInternos(temPessoas);
+	iluminacaoGaragem(horaAtual, temPessoas);
+	iluminacaoJardim(horaAtual);
+	arCondicionado(temperaturaAr, temperaturaExterna, temPessoas, alterarOperacaoAr, arOperacaoMax, arOperacaoMin);
+	return 0;
 }
 
 /*#include <stdio.h>
