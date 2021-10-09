@@ -3,70 +3,165 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <locale.h>
+#include <string.h>
 
+// TOPICS TO PUBLISH
+#define TOPIC_ILUMINACAO_JARDIM "JARDIM/ILUMINACAO/VALOR"
+#define TOPIC_ILUMINACAO_INTERNO "INTERNO/ILUMINACAO/VALOR"
+#define TOPIC_ILUMINACAO_GARAGEM "GARAGEM/ILUMINACAO/VALOR"
+#define TOPIC_ARCONDICIONADO_TEMPERATURA "AC/TEMPERATURA/VALOR"
+#define TOPIC_ALARME "ALARME/VALOR"
+
+//TOPICS TO SUBSCRIBE
+#define TOPIC_ARCONDICIONADO_TEMPERATURA_MAX "AC/TEMPERATURA/MAX"
+#define TOPIC_ARCONDICIONADO_TEMPERATURA_MIN "AC/TEMPERATURA/MIN"
+#define TOPIC_ARCONDICIONADO_TEMPO_AUSENCIA_PESSOAS "AC/TEMPERATURA/TEMPOAMBIENTEVAZIO"
+#define TOPIC_ILUMINACAO_JARDIM_TOGGLE "JARDIM/ILUMINACAO/TOGGLE"
+#define TOPIC_ILUMINACAO_GARAGEM_TOGGLE "GARAGEM/ILUMINACAO/TOGGLE"
+#define TOPIC_ILUMINACAO_INTERNO_TOGGLE "INTERNO/ILUMINACAO/TOGGLE"
+#define TOPIC_ARCONDICIONADO_TOGGLE "AC/TOGGLE"
+#define TOPIC_ALARME_TOGGLE "ALARME/TOGGLE"
+#define TOPIC_AC_RESET "AC/RESET"
+
+// VARIÁVEIS GLOBAIS
+int TEMPERATURA_EXTERNA;
+
+// ESTADOS
+typedef struct {
+	int estado_atual;
+	int temp_atual;
+	int temp_min;
+	int temp_max;
+	int alterar_operacao_default;
+	int tempo_ausencia_pessoas;
+} AC;
+
+typedef struct {
+	int estado_atual;
+} Alarme;
+
+typedef struct {
+	int estado_atual;
+	int hora_minima;
+	int hora_maxima;
+} Jardim;
+
+typedef struct {
+	int estado_atual;
+	int hora_minima;
+	int hora_maxima;
+} Garagem;
+
+typedef struct {
+	int estado_atual;
+} LuzInterna;
+
+typedef struct {
+	AC ac;
+	Alarme alarme;
+	Jardim jardim;
+	Garagem garagem;
+	LuzInterna luzInterna;
+	bool automacaoTOGGLE;
+} Components;
 
 // SISTEMA DE ALARME
-void alarme(bool temPessoas, bool portaJarnelaAbertas){
-	if(temPessoas){
-		printf("Saída do alarme por PRESENÇA DE INTRUSOS.\n",setlocale(LC_ALL,""));
-	}
-	
-	if(portaJarnelaAbertas){
-		printf("Saída do alarme por PORTAS OU JANELAS ABERTAS.\n",setlocale(LC_ALL,""));
+void alarme(bool temPessoas, bool portaJarnelaAbertas, Components comp){
+	if(comp.automacaoTOGGLE){
+		if(temPessoas || portaJarnelaAbertas){
+			printf("Saída do alarme por PRESENÇA DE INTRUSOS ou PORTAS E/OU JANELAS ABERTAS.\n",setlocale(LC_ALL,""));
+			comp.alarme.estado_atual = 1;
+		} else {
+			comp.alarme.estado_atual = 0;
+		}
 	}
 }
 
 // ILUMINAÇÃO DOS AMBIENTES INTERNOS
-void iluminacaoAmbientesInternos(bool temPessoas){
-	if(temPessoas){
-		printf("Iluminação do ambiente ligada.\n",setlocale(LC_ALL,""));
-	} else {
-		printf("Iluminação do ambiente desligada.\n",setlocale(LC_ALL,""));
+void iluminacaoAmbientesInternos(bool temPessoas, Components comp){
+	if(comp.automacaoTOGGLE){
+		if(temPessoas){
+			printf("Iluminação do ambiente ligada.\n",setlocale(LC_ALL,""));
+			comp.luzInterna.estado_atual = 1;
+		} else {
+			comp.luzInterna.estado_atual = 0;
+			printf("Iluminação do ambiente desligada.\n",setlocale(LC_ALL,""));
+		}
 	}
 }
 
 // ILUMINAÇÃO DA GARAGEM
-void iluminacaoGaragem(int horaAtual, bool temPessoas){
-	if(temPessoas){
-		if(horaAtual >= 18 || horaAtual <= 23 || horaAtual >= 0 || horaAtual <= 6){
-		printf("Iluminação da garagem ligada.\n",setlocale(LC_ALL,""));
+void iluminacaoGaragem(int horaAtual, bool temPessoas, Components comp){
+	if(comp.automacaoTOGGLE){
+		if(temPessoas){
+			if(horaAtual >= comp.garagem.hora_minima|| horaAtual <= comp.garagem.hora_maxima){ Ex: maxima = 06 minima = 18
+			printf("Iluminação da garagem ligada.\n",setlocale(LC_ALL,""));
+			comp.garagem.estado_atual = 1;
+			} else {
+				comp.garagem.estado_atual = 0;
+				printf("Iluminação da garagem desligada.\n",setlocale(LC_ALL,""));
+			}
 		} else {
+			comp.garagem.estado_atual = 0;
 			printf("Iluminação da garagem desligada.\n",setlocale(LC_ALL,""));
 		}
-	} else {
-		printf("Iluminação da garagem desligada.\n",setlocale(LC_ALL,""));
 	}
 }
 
 // ILUMINAÇÃO DO JARDIM
-void iluminacaoJardim(int horaAtual){
-	if(horaAtual >= 18 || horaAtual <= 23){
-		printf("Iluminação do jardim ligada.\n",setlocale(LC_ALL,""));
+void iluminacaoJardim(int horaAtual, Components comp){
+	if(comp.automacaoTOGGLE){
+		if(horaAtual >= comp.jardim.hora_minima|| horaAtual <= comp.jardim.hora_maxima){ Ex: maxima = 23 minima = 18
+			comp.jardim.estado_atual = 1;
+			printf("Iluminação do jardim ligada.\n",setlocale(LC_ALL,""));
+		} else {
+			comp.jardim.estado_atual = 0;
+		}
 	}
 }
 
 // SISTEMA DO AR CONDICIONADO
-void arCondicionado(int temperaturaAr, int temperaturaExterna, bool temPessoas, bool alterarOperacaoAr, int arOperacaoMax, int arOperacaoMin) {
-	if(alterarOperacaoAr){
-		if( temperaturaAr < arOperacaoMin || temperaturaAr > arOperacaoMax ){
-			arForaFaixaOperacao(temperaturaAr, temperaturaExterna);
-			printf("Ar condicionado ligado.\n",setlocale(LC_ALL,""));
+void arCondicionado(bool temPessoas, Components comp){
+	if(comp.automacaoTOGGLE){
+		if(comp.ac.alterar_operacao_default){
+			if( comp.ac.temp_atual < comp.ac.temp_min || comp.ac.temp_atual > comp.ac.temp_max ){
+				comp.ac.temp_atual = arForaFaixaOperacao(comp.ac.temp_atual);
+				if( comp.ac.temp_atual >= comp.ac.temp_min || comp.ac.temp_atual <= comp.ac.temp_max ) {
+					comp.ac.estado_atual = 1;
+					printf("Ar condicionado ligado.\n",setlocale(LC_ALL,""));
+				} else {
+					comp.ac.estado_atual = 0;
+				}
+			}
+		} else {
+			if(comp.ac.temp_atual >= 17){
+				comp.ac.temp_atual = arForaFaixaOperacao(comp.ac.temp_atual);
+				if(comp.ac.temp_atual < 17) {
+					comp.ac.estado_atual = 1;
+					printf("Ar condicionado ligado.\n",setlocale(LC_ALL,""));
+				} else {
+					comp.ac.estado_atual = 0;
+				}
+				
+			}
 		}
-	} else {
-		if(temperaturaAr >= 17){
-			arForaFaixaOperacao(temperaturaAr, temperaturaExterna);
-			printf("Ar condicionado ligado.\n",setlocale(LC_ALL,""));
+		
+		if(!temPessoas && comp.ac.estado_atual == 1){
+			ausenciaPessoas(comp.ac.tempo_ausencia_pessoas);
+			comp.ac.estado_atual = 0;
 		}
-	}
-	
-	if(!temPessoas){
-		ausenciaPessoas();
 	}
 }
 
 // Desliga o ar condicionado por 5 minutos e liga novamente.
-void arForaFaixaOperacao(int temperaturaAr, int temperaturaExterna){
-	int tempoLigarAr = 10;
+int arForaFaixaOperacao(int temperaturaAr){
+	int tempoLigarAr = 5;
+	int TEMPERATURA_EXTERNA = (double) rand() / (double) RAND_MAX;
+	if(TEMPERATURA_EXTERNA > 0.5){
+		TEMPERATURA_EXTERNA = 1;
+	} else {
+		TEMPERATURA_EXTERNA = 0;
+	}
 	// counter downtime for run a rocket while the delay with more 0
     do {
         // erase the previous line and display remain of the delay
@@ -80,18 +175,18 @@ void arForaFaixaOperacao(int temperaturaAr, int temperaturaExterna){
         tempoLigarAr--;
         
         // Temperatura do ar aumenta caso a temperatura externa esteja aumentando (igual a 1), caso contrário a temperatura do ar diminui.
-        if(temperaturaExterna == 1) {
+        if(TEMPERATURA_EXTERNA == 1) {
         	temperaturaAr++;
 		} else {
 			temperaturaAr--;
 		}
 
     } while (tempoLigarAr >= 0);
+	return temperaturaAr;
 }
 
 // Desliga o ar condicionado depois de um determinado periodo de tempo com a sala vazia.
-void ausenciaPessoas(){
-	int tempoDesligarAr = 6;
+void ausenciaPessoas(int tempoDesligarAr){
 	// counter downtime for run a rocket while the delay with more 0
     do {
         // erase the previous line and display remain of the delay
@@ -138,189 +233,111 @@ void setTimeout(int milliseconds)
 
 // FUNÇÕES DE ENTRADAS
 
-int horaAtual_function(int gpio){
+int input_horaAtual(int gpio){
 	if(gpio){
 		return gpio;
 	} return 10;
 }
 
-int temperaturaAr_function(int gpio){
+int input_temperaturaAr(int gpio){
 	if(gpio){
 		return gpio;
 	} return 16;
 }
 
-int temperaturaExterna_function(int gpio){
+int input_temperaturaExterna(int gpio){
 	if(gpio){
 		return gpio;
 	} return 0;
 }
 
-int arOperacaoMax_function(int gpio){
+int input_arOperacaoMax(int gpio){
 	if(gpio){
 		return gpio;
 	} return 20;
 }
 
-int arOperacaoMin_function(int gpio){
+int input_arOperacaoMin(int gpio){
 	if(gpio){
 		return gpio;
 	} return 5;
 }
 
-int temPessoas_function(int gpio){
+int input_temPessoas(int gpio){
 	if(gpio){
 		return gpio;
 	} return 0;
 }
 
-int portaJarnelaAbertas_function(int gpio){
+int input_portaJarnelaAbertas(int gpio){
 	if(gpio){
 		return gpio;
 	} return 0;
 }
 
-int alterarOperacaoAr_function(int gpio){
+int input_alterarOperacaoAr(int gpio){
 	if(gpio){
 		return gpio;
 	} return 0;
 }
 
-// ................................................................................
-// ......ESTADOS
-// ................................................................................
-typedef struct {
-	char estado_atual;
-	char temp_atual;
-	char temp_min;
-	char temp_max;
-	char ligar_em;
-	char desligar_em; 
-} AC;
 
-typedef struct {
-	char ativo;
-	char ligar_em;
-	char desligar_em; 
-} Alarme;
-
-typedef struct {} Jardim;
-
-typedef struct {
-	char estado_atual;
-	char ligar_em;
-	char desligar_em; 
-} LuzInterna;
-typedef struct {
-	AC ac;
-	Alarme alarme;
-	Jardim jardim;
-	LuzInterna luzInterna;
-} Components;
-
-// typedef struct {
-// 	char ac_valor;
-// 	char ac_temp_min;
-// 	char ac_temp_max;
-// 	char ac_ligar_em;
-// 	char ac_desligar_em; 
-// 	char interno_ligar_em;
-// } Components;
-
-void tratar_mensagem(Components *comp){
-	rc = mensagem_recebida()
-	switch (1){
-	case "LIGAR_EM":
-		comp.ac_ligar_em = "djalskdjlaksj"
-		break;
-	
-	default:
-		break;
+// TÓPICOS QUE VÃO CHEGAR DA WEB
+void tratar_mensagem_recebida(Components comp, char topic[], char message){
+	if(strcmp(topic, TOPIC_ARCONDICIONADO_TEMPERATURA_MAX) == 0){
+		comp.ac.temp_max = 20;
+	}  else if(strcmp(TOPIC_ARCONDICIONADO_TEMPERATURA_MIN, topic) == 0){
+		comp.ac.temp_min = 5;
+	}  else if(strcmp(TOPIC_AC_RESET, topic) == 0){
+		comp.ac.alterar_operacao_default = 0;
+	}  else if(strcmp(TOPIC_ARCONDICIONADO_TEMPO_AUSENCIA_PESSOAS, topic) == 0){
+		comp.ac.tempo_ausencia_pessoas = 20;
+	}  else if(strcmp(TOPIC_ILUMINACAO_JARDIM_TOGGLE, topic) == 0){
+		comp.jardim.estado_atual = 0;
+	}  else if(strcmp(TOPIC_ILUMINACAO_GARAGEM_TOGGLE, topic) == 0){
+		comp.ac.estado_atual = 1;
+	}  else if(strcmp(TOPIC_ILUMINACAO_INTERNO_TOGGLE, topic) == 0){
+		comp.luzInterna.estado_atual = 1;
+	}  else if(strcmp(TOPIC_ALARME_TOGGLE, topic) == 0){
+		comp.garagem.estado_atual = 0;
+	}  else if(strcmp(TOPIC_ARCONDICIONADO_TOGGLE, topic) == 0){
+		comp.ac.estado_atual = 1;
 	}
 }
 
 int main(){
+	struct tm *p;
+	time_t seconds;
 
-	//PRIMEIRO TEM QUE STARTAR OS ESTADOS DO SISTEMA, OU SEJA
-	//PRIMEIRO CHECA SE TEM VALORES SALVOS (BANCO OU QUALQUER COISA QUE A GENTE FOR USAR)
-	//SENÃO TEM VALOR SALVO, SETA OS ESTADOS COM VALORES DEFAULT
+	time(&seconds);
+    p = localtime(&seconds);
+	int horario_ATUAL = p->tm_hour;
 	Components comp;
-	//Você pode acessar os elementos da struct dessa maneira:
-	// comp.ac.desligar_em;
-	// comp.alarme...
+
+	// Entradas para teste
+	bool temPessoas_ALARME = true, temPessoas_GARAGEM = true, temPessoas_AC = false, temPessoas_INTERNO =true, portaJarnelaAbertas_ALARME = false, horarioAtual_ATUALIZOU = false;
+	char mensagemTOPICO[] = "JARDIM/ILUMINACAO/TOGGLE";
+	char mm[] = "JARDIM/ILUMINACAO/TOGGLE";
+	comp.automacaoTOGGLE = 1;
 	
-	int horaAtual = 10, temperaturaAr = 16, temperaturaExterna = 0, arOperacaoMax = 20, arOperacaoMin = 5;
-    //typedef enum {false=0, true=1} bool ;
-	bool temPessoas = false, portaJarnelaAbertas = false, alterarOperacaoAr = false;
-
-	// tratar_mensagem(&comp) // MENSAGENS QUE CHEGAREM DOS SUBSCRIBERS
-	// EXEMPLOS DE COMO PODE SALVAR AS VARIÁVEIS 
-	// ac_tempo = "de 3 horas até 5 horas";	//ESTADO MAIS GENÉRICO X
-	// ac_ligar_em = "3"										//ESTADO MENOS GENÉRICO V
-	// ac_desligar_em = "5"									//ESTADO MENOS GENÉRICO V
-	// PORQUE DEPOIS VAI PASSAR EM UMA FUNÇÃO TIPO ASSIM
-	// tratar_mensagem(ac_ligar_em, ac_desligar_em, interno_ligar_em, ... );
-	// ENTÃO PODE MANDAR COM STRUCT
-	// tratar_mensagem(comopnentes);
-
-	// QUANDO FOR PARA UMA FUNÇÃO, PODE PASSAR A STRUCT E MANIPULAR DENTRO DELA
-	// void ac(Components *comp){
-	// 	comp.ac.ligar_em
-	// 	if(pessoa){
-	//		comp.ac.estado_atual = "ON"
-	//		return;
-	// 	}
-	// }
-
-	printf("%d",arOperacaoMin_function(0));
-	alarme(temPessoas, portaJarnelaAbertas);
-	iluminacaoAmbientesInternos(temPessoas);
-	iluminacaoGaragem(horaAtual, temPessoas);
-	iluminacaoJardim(horaAtual);
-	arCondicionado(temperaturaAr, temperaturaExterna, temPessoas, alterarOperacaoAr, arOperacaoMax, arOperacaoMin);
-	return 0;
-}
-
-/*#include <stdio.h>
-
-int main(){
-	int inicio,sala,interno,abertura,externo,alarme,alarmeAcionado,arOperacao;
-	printf("1- Iniciar sistema\n");
-	printf("Qualquer outro botao- Fechar sistema\n");
-	scanf("%d",&inicio);
-	
-	if(inicio == 1){
-		printf("Faixa de operacao do ar\n");
-		scanf("%d",&arOperacao);
-		printf("sistema iniciado\n");
-	}
-
-	while(inicio == 1){	
-		printf("AMBIENTE INTERNO: presenca de pessoas - 1 para sim - 2 para nao\n");
-		scanf("%d",&interno);
-		printf("AMBIENTE EXTERNO: presenca de pessoas - 1 para sim - 2 para nao\n");
-		scanf("%d",&externo);
-		printf("ABERTURA JANELA/PORTAS: - 1 aberto - 2 fechado\n");
-		scanf("%d",&abertura);
-		printf("AMBIENTE SALA: presenca de pessoas - 1 para sim - 2 para nao\n");
-		scanf("%d",&sala);
-		printf("ALARME: - 1 para ligado - 2 para desligado\n");
-		scanf("%d",&alarme);
-		if(interno == 1 && alarmeAcionado != 1){
-			printf("AMBIENTE INTERNO: Luz acesa\n");
-		}else{
-			printf("AMBIENTE INTERNO: Luz apagada\n");
+	while(true){
+		if(horario_ATUAL < p->tm_hour) {
+			horario_ATUAL = p->tm_hour;
+			horarioAtual_ATUALIZOU = true;
 		}
-		if(sala == 1 && alarmeAcionado != 1){
-			printf("SALA: Luz acesa\n");
-			//logica do ar
-		}else{
-			printf("SALA: Luz apagada\n");
-		}	
-		if(alarmeAcionado == 1){
-			printf("ALARME: ligado n");
+		if((horarioAtual_ATUALIZOU) || (temPessoas_ALARME) || (temPessoas_GARAGEM) || (temPessoas_AC) || (portaJarnelaAbertas_ALARME) || (mensagemTOPICO)){
+
+			if(mensagemTOPICO) {
+				tratar_mensagem_recebida(comp, mensagemTOPICO, mm);
+			}
+
+			alarme(temPessoas_ALARME, portaJarnelaAbertas_ALARME, comp);
+			iluminacaoAmbientesInternos(temPessoas_INTERNO, comp);
+			iluminacaoGaragem(horario_ATUAL, temPessoas_GARAGEM, comp);
+			iluminacaoJardim(horario_ATUAL, comp);
+			arCondicionado(temPessoas_AC, comp);
+			horarioAtual_ATUALIZOU = false;
 		}
 	}
-	return 0;
+    return 0;
 }
-*/
