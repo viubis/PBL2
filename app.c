@@ -2,12 +2,14 @@
 #include <stdlib.h>
 #include <string.h>
 #include "MQTTClient.h"
+#include <unistd.h>
+
 
 // #define ADDRESS     "tcp://localhost:1883"
 //...................................................................
 //... ADRESS
 //...................................................................
-#define ADDRESS     ""
+#define ADDRESS     
 #define ID          "RASPBERRY"
 
 #define QOS         2
@@ -21,17 +23,30 @@ void onMessageDelivered(void *context, MQTTClient_deliveryToken dt){
     deliveredtoken = dt;
 }
 
+void tratar_mensagem(char topic[], char message[]){
+  printf("%s\n", topic);
+  printf("%s\n", message);
+  switch(topic){
+    case "":
+      break;
+    default;
+      break;
+  }
+}
+
 int onMessageArrived(void *context, char *topicName, int topicLen, MQTTClient_message *message) {
-    int i;
-    char* payloadptr;
-    printf("Message arrived\n");
-    printf("     topic: %s\n", topicName);
-    printf("   message: ");
-    payloadptr = message->payload;
-    for(i=0; i<message->payloadlen; i++){
-      putchar(*payloadptr++);
-    }
-    putchar('\n');
+    // int i;
+    // char* payloadptr;
+    // printf("Message arrived\n");
+    // printf("     topic: %s\n", topicName);
+    // printf("   message: %s\n", message->payload);
+    // payloadptr = message->payload;
+    // for(i=0; i<message->payloadlen; i++){
+    //   putchar(*payloadptr++);
+    // }
+    // putchar('\n');
+    tratar_mensagem(topicName, message->payload);
+
     MQTTClient_freeMessage(&message);
     MQTTClient_free(topicName);
     return 1;
@@ -55,7 +70,7 @@ void publishMessage(MQTTClient client, MQTTClient_deliveryToken * token,
 }
 
 void subscribeTo(MQTTClient client){
-  MQTTClient_subscribe(client, "JARDIM/LUZ", QOS);
+  MQTTClient_subscribe(client, "TOPICO", QOS);
 }
 
 void finishConnection(MQTTClient client){
@@ -100,7 +115,7 @@ int main() {
   //...................................................................
   //... USERNAME E PASSWORD
   //...................................................................
-  conn_opts.username =
+  conn_opts.username =  
   conn_opts.password = 
 
   rc = MQTTClient_connect(client, &conn_opts);
@@ -111,8 +126,12 @@ int main() {
 
   subscribeTo(client);
 
+  // char *topic = NULL;
+  // int topic_len;
+  // MQTTClient_message *receive_msg = NULL;
+  // char *ptr = NULL;
+
   do{
-      // ch = getchar();
       scanf("%s", buffer);
 
       if(strcmp("q", buffer) != 0){
