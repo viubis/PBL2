@@ -3,6 +3,7 @@
 #include <string.h>
 #include "MQTTClient.h"
 #include <unistd.h>
+#include <wiringPi.h>
 
 
 // #define ADDRESS     "tcp://localhost:1883"
@@ -18,6 +19,13 @@
 
 volatile MQTTClient_deliveryToken deliveredtoken;
 
+//Entradas Switchs e buttons
+#define SWITCH_PRESENCA_SALA 4 
+#define SWITCH_PRESENCA_GARAGEM 17
+#define SWITCH_PRESENCA_INTERNO 27
+#define SWITCH_ALARME 22
+#define BUTTON_PORTA 5
+#define BUTTON_JANELA 19
 
 // TOPICS TO PUBLISH
 #define TOPIC_ILUMINACAO_JARDIM "JARDIM/ILUMINACAO/VALOR"
@@ -85,6 +93,50 @@ typedef struct {
 int TEMPERATURA_EXTERNA;
 bool MENSAGEM_RECEBIDA = false;
 Components comp;
+
+
+//verifica alterações na entrada
+bool alteracao(int presenca_sala,int presenca_garagem,int presenca_interno,int switch_alarme,int janela,int porta){
+	
+	int estado_presenca_garagem, estado_presenca_interna, estado_presenca_sala, estado_alarme, estado_porta, estado_janela;
+	
+	if(presenca_sala != estado_presenca_sala){
+		estado_presenca_sala = presenca_sala;
+		return true;
+	}
+	if(presenca_garagem != estado_presenca_garagem){
+		estado_presenca_garagem = presenca_garagem;
+		return true;
+	}
+	if(presenca_interno != estado_presenca_interna){
+		estado_presenca_interna = presenca_interno;
+		return true;
+	}
+	if(switch_alarme != estado_alarme){
+		estado_alarme = switch_alarme;
+		return true;
+	}
+	if(janela != estado_janela){
+		estado_janela = janela;
+		return true;
+	}
+	if(porta != estado_porta){
+		estado_porta = porta;
+		return true;
+	}
+
+
+	return false;
+}
+
+
+if(alteracao(SWITCH_PRESENCA_SALA,SWITCH_PRESENCA_GARAGEM,SWITCH_PRESENCA_INTERNO,SWITCH_ALARME,BUTTON_JANELA,BUTTON_PORTA) == true || MENSAGEM_RECEBIDA)
+#define SWITCH_PRESENCA_SALA 4 
+#define SWITCH_PRESENCA_GARAGEM 17
+#define SWITCH_PRESENCA_INTERNO 27
+#define SWITCH_ALARME 22
+#define BUTTON_PORTA 5
+#define BUTTON_JANELA 19
 
 // SISTEMA DE ALARME
 void alarme(bool temPessoas, bool portaJarnelaAbertas){
@@ -290,8 +342,8 @@ int input_temPessoas(int gpio){
 }
 
 int input_portaJarnelaAbertas(int gpio){
-	if(gpio){
-		return gpio;
+	if(gpio || ){
+		return 1;
 	} return 0;
 }
 
@@ -387,6 +439,19 @@ int main() {
   MQTTClient_connectOptions conn_opts = MQTTClient_connectOptions_initializer;
   MQTTClient_deliveryToken token;
 
+//CONF PINOS
+	wiringPiSetupGpio () ;
+
+	pinMode (SWITCH_PRESENCA_SALA, INPUT) ;
+	pinMode (SWITCH_PRESENCA_GARAGEM, INPUT) ;
+	pinMode (SWITCH_PRESENCA_INTERNO, INPUT) ;
+	pinMode (SWITCH_ALARME, INPUT) ;
+	pinMode (BUTTON_PORTA, INPUT) ;
+	pinMode (BUTTON_JANELA, INPUT) ;
+
+    printf ("pinos de botão foram configurados. \n") ;
+//fim conf pinos	
+
   struct tm *p;
 	time_t seconds;
 
@@ -395,11 +460,14 @@ int main() {
 	int horario_ATUAL = p->tm_hour, rc;
   char buffer[512]
 
-  // Inicio de entradas para teste
+  /*/ Inicio de entradas para teste
 	bool temPessoas_ALARME = true, temPessoas_GARAGEM = true, temPessoas_AC = false, temPessoas_INTERNO =true, portaJarnelaAbertas_ALARME = false, horarioAtual_ATUALIZOU = false;
 	comp.automacaoTOGGLE = 1;
 	// Final de entradas para teste
+*/
 
+	bool horarioAtual_ATUALIZOU = false,
+	comp.automacaoTOGGLE = 1;
   rc = MQTTClient_create(&client, ADDRESS, ID,
       MQTTCLIENT_PERSISTENCE_NONE, NULL);
 
@@ -459,25 +527,27 @@ int main() {
 			horario_ATUAL = p->tm_hour;
 			horarioAtual_ATUALIZOU = true;
 		}
-		if((horarioAtual_ATUALIZOU) || (temPessoas_ALARME) || (temPessoas_GARAGEM) || (temPessoas_AC) || (portaJarnelaAbertas_ALARME) || (MENSAGEM_RECEBIDA)){
+		if(alteracao( digitalRead(SWITCH_PRESENCA_SALA), digitalRead(SWITCH_PRESENCA_GARAGEM),digitalRead(SWITCH_PRESENCA_INTERNO),
+								digitalRead(SWITCH_ALARME),digitalRead(BUTTON_JANELA),digitalRead(BUTTON_PORTA)) == true || MENSAGEM_RECEBIDA){
+		//if((horarioAtual_ATUALIZOU) || (temPessoas_ALARME) || (temPessoas_GARAGEM) || (temPessoas_AC) || (portaJarnelaAbertas_ALARME) || (MENSAGEM_RECEBIDA)){
 
 			alarme(temPessoas_ALARME, portaJarnelaAbertas_ALARME);
-      publishMessage(client, &token, "ALARME/VALOR", comp.alarme.estado_atual);
+      		publishMessage(client, &token, "ALARME/VALOR", comp.alarme.estado_atual);
 
 			iluminacaoAmbientesInternos(temPessoas_INTERNO);
-      publishMessage(client, &token, "INTERNO/ILUMINACAO/VALOR", comp.luzInterna.estado_atual);
+      		publishMessage(client, &token, "INTERNO/ILUMINACAO/VALOR", comp.luzInterna.estado_atual);
 
 			iluminacaoGaragem(horario_ATUAL, temPessoas_GARAGEM);
-      publishMessage(client, &token, "GARAGEM/ILUMINACAO/VALOR", comp.garagem.estado_atual);
+      		publishMessage(client, &token, "GARAGEM/ILUMINACAO/VALOR", comp.garagem.estado_atual);
 
 			iluminacaoJardim(horario_ATUAL);
-      publishMessage(client, &token, "JARDIM/ILUMINACAO/VALOR", comp.jardim.estado_atual);
+      		publishMessage(client, &token, "JARDIM/ILUMINACAO/VALOR", comp.jardim.estado_atual);
 
 			arCondicionado(temPessoas_AC);
-      publishMessage(client, &token, "AC/TEMPERATURA/VALOR", comp.ac.estado_atual);
+      		publishMessage(client, &token, "AC/TEMPERATURA/VALOR", comp.ac.estado_atual);
 
 			horarioAtual_ATUALIZOU = false;
-      MENSAGEM_RECEBIDA = false;
+      		MENSAGEM_RECEBIDA = false;
 		}
 	}
 
