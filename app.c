@@ -102,33 +102,42 @@ bool alteracao(int presenca_sala,int presenca_garagem,int presenca_interno,int s
 	
 	if(presenca_sala != estado_presenca_sala){
 		estado_presenca_sala = presenca_sala;
+		printf("sala\n");
 		return true;
 	}
 	if(presenca_garagem != estado_presenca_garagem){
 		estado_presenca_garagem = presenca_garagem;
+		printf("garagem\n");
 		return true;
 	}
 	if(presenca_interno != estado_presenca_interna){
 		estado_presenca_interna = presenca_interno;
+		printf("interno\n");
 		return true;
 	}
 	if(switch_alarme != estado_alarme){
 		estado_alarme = switch_alarme;
+		printf("alarme\n");
 		return true;
 	}
 	if(janela != estado_janela){
 		estado_janela = janela;
+		printf("janela\n");
 		return true;
 	}
 	if(porta != estado_porta){
 		estado_porta = porta;
+		printf("porta\n");
 		return true;
 	}
-
 
 	return false;
 }
   
+ //funcao pra ativamento dos sistemas
+void ativamento(int presenca_sala,int presenca_garagem,int presenca_interno,int switch_alarme,int janela,int porta){
+
+}	
 
 // SISTEMA DE ALARME
 void alarme(bool temPessoas, bool portaJarnelaAbertas){
@@ -154,6 +163,7 @@ void iluminacaoAmbientesInternos(bool temPessoas){
 		}
 	}
 }
+
 
 // ILUMINAÇÃO DA GARAGEM
 void iluminacaoGaragem(int horaAtual, bool temPessoas){
