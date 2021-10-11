@@ -128,15 +128,7 @@ bool alteracao(int presenca_sala,int presenca_garagem,int presenca_interno,int s
 
 	return false;
 }
-
-
-if(alteracao(SWITCH_PRESENCA_SALA,SWITCH_PRESENCA_GARAGEM,SWITCH_PRESENCA_INTERNO,SWITCH_ALARME,BUTTON_JANELA,BUTTON_PORTA) == true || MENSAGEM_RECEBIDA)
-#define SWITCH_PRESENCA_SALA 4 
-#define SWITCH_PRESENCA_GARAGEM 17
-#define SWITCH_PRESENCA_INTERNO 27
-#define SWITCH_ALARME 22
-#define BUTTON_PORTA 5
-#define BUTTON_JANELA 19
+  
 
 // SISTEMA DE ALARME
 void alarme(bool temPessoas, bool portaJarnelaAbertas){
