@@ -6,6 +6,7 @@
 #include <string.h>
 #include <MQTTClient.h>
 
+
 /*
 * Defines
 */
@@ -56,10 +57,10 @@ void publish(MQTTClient client, char* topic, char* payload) {
 int on_message(void *context, char *topicName, int topicLen, MQTTClient_message *message) {
     char* payload = message->payload;
 
-    /* Mostra a mensagem recebida no tópico subescrito*/
+    /* Mostra a mensagem recebida no tï¿½pico subescrito*/
     printf("Mensagem recebida! \n\rTopico: %s Mensagem: %s\n", topicName, payload);
 
-    /* Faz echo da mensagem recebida no tópico de publish */
+    /* Faz echo da mensagem recebida no tï¿½pico de publish */
     publish(client, MQTT_PUBLISH_TOPIC, payload);
 
     MQTTClient_freeMessage(&message);
@@ -72,7 +73,7 @@ int main(int argc, char *argv[])
    int rc;
    MQTTClient_connectOptions conn_opts = MQTTClient_connectOptions_initializer;
 
-   /* Inicializacao do MQTT e configução de funcao de callback MQTT */
+   /* Inicializacao do MQTT e configuï¿½ï¿½o de funcao de callback MQTT */
    MQTTClient_create(&client, MQTT_ADDRESS, CLIENTID, MQTTCLIENT_PERSISTENCE_NONE, NULL);
    MQTTClient_setCallbacks(client, NULL, NULL, on_message, NULL);
 
@@ -92,7 +93,7 @@ int main(int argc, char *argv[])
    while(1)
    {
        /*
-        * este client opera por "interrupcao", ou seja, opera em função do que é recebido no callback de recepcao de 
+        * este client opera por "interrupcao", ou seja, opera em funï¿½ï¿½o do que ï¿½ recebido no callback de recepcao de 
         * mensagens MQTT. Portanto, neste laco principal nao eh preciso fazer nada.
         */
    }
