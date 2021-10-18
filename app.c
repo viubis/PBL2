@@ -15,16 +15,16 @@
 //...................................................................
 //... ADRESS
 //...................................................................
-#define ADDRESS     ""
+#define ADDRESS     "ssl://b0b1b4c6d9b148d7bc0f4c535f24c67a.s1.eu.hivemq.cloud:8883"
 #define ID          "RASPBERRY"
 
 #define QOS         2
 #define TIMEOUT     10000L
 #define KEEP_ALIVE  60
-#define CLIENT_DB	""
-#define DATABASE_DB					""
-#define COLLECTION_LOG_ALARMS_DB	""
-#define COLLECTION_LOG_TOPICS_DB	""
+#define CLIENT_DB	"mongodb+srv://mqttuefs20212:mqttuefs20212@historicalarmlogs.qjple.mongodb.net/myFirstDatabase?retryWrites=true&w=majority"
+#define DATABASE_DB					"historic_logs"
+#define COLLECTION_LOG_ALARMS_DB	"alarm_logs"
+#define COLLECTION_LOG_TOPICS_DB	"last_logs_all_topics"
 
 volatile MQTTClient_deliveryToken deliveredtoken;
 
@@ -160,6 +160,7 @@ time_t desligar_em = 0;
 char *str;
 int TEMPERATURA_EXTERNA;
 bool MENSAGEM_RECEBIDA = false;
+int maxMinAtivo = 0; defaultRecebido = 0;
 Components comp;
 
 
@@ -170,7 +171,7 @@ void onConnectionLost(void *context, char *cause){
 
 void publishMessage(MQTTClient client, MQTTClient_deliveryToken * token, 
                   char *topic, char *message){
-	printf("PUBLISHHHHHHHHHHHHHHH\n");
+	printf("PREPARANDO PARA PUBLICAR A MENSAGEM\n");
   MQTTClient_message pubmsg = MQTTClient_message_initializer;
   pubmsg.payload = message;
   pubmsg.payloadlen = strlen(message);
@@ -178,11 +179,8 @@ void publishMessage(MQTTClient client, MQTTClient_deliveryToken * token,
   pubmsg.retained = 0;
   deliveredtoken = 0;
 
-	/*printf("\nENTROU NA PUBLICAÇÃO\n");
-	printf("%s\n", topic);
-	printf("%s\n", message);*/
-
-  MQTTClient_publishMessage(client, topic, &pubmsg, token);
+  int resp = MQTTClient_publishMessage(client, topic, &pubmsg, token);
+	printf("\nRESPOSTA %d\n", resp);
   printf("Waiting for publication -- %s: %s\n", topic, message);
 }
 
@@ -211,8 +209,8 @@ void atualizarMongo(char key[], int type, int value){
 	} else if(type == 1){
 		doc = BCON_NEW ("$set", "{", "id",BCON_UTF8("6164a7695a312709b0574e52"), key,BCON_BOOL(value), "}");
 	}
-
-	if(!mongoc_collection_update_one(collection_topics,query,doc,NULL,NULL,&error)){
+	int b = mongoc_collection_update_one(collection_topics,query,doc,NULL,NULL,&error);
+	if(!b){
 		printf("%s\n",error.message);
 	}
 }
@@ -444,7 +442,7 @@ void verificarArCondicionado(int returnAC){
 	if(returnAC == 2){
 		printf("Ar condicionado desligado devido a ausência de pessoas.\n");
 		comp.ac.estado_atual = 0;
-	} else if(returnAC == 1 && comp.ac.estado_atual && comp.ac.alterar_operacao_default){
+	} else if(returnAC == 1 && comp.ac.estado_atual && comp.ac.alterar_operacao_default && maxMinAtivo == 3){
 		
 		if( comp.ac.temp_atual >= comp.ac.temp_min || comp.ac.temp_atual <= comp.ac.temp_max ) {
 			comp.ac.estado_atual = 1;
@@ -466,101 +464,29 @@ void verificarArCondicionado(int returnAC){
 }
 
 
-// FUNÃ‡Ã•ES DE ENTRADAS
-/*int input_horaAtual(int gpio){
-	if(gpio){
-		return gpio;
-	} return 10;
-}
-
-int input_temperaturaAr(int gpio){
-	if(gpio){
-		return gpio;
-	} return 16;
-}
-
-int input_temperaturaExterna(int gpio){
-	if(gpio){
-		return gpio;
-	} return 0;
-}
-
-int input_arOperacaoMax(int gpio){
-	if(gpio){
-		return gpio;
-	} return 20;
-}
-
-int input_arOperacaoMin(int gpio){
-	if(gpio){
-		return gpio;
-	} return 5;
-}
-
-int input_temPessoas(int gpio){
-	if(gpio){
-		return gpio;
-	} return 0;
-}
-
-int input_portaJarnelaAbertas(int gpio){
-	if(gpio){
-		return gpio;
-	} return 0;
-}
-
-int input_alterarOperacaoAr(int gpio){
-	if(gpio){
-		return gpio;
-	} return 0;
-}*/
-
 
 void onMessageDelivered(void *context, MQTTClient_deliveryToken dt){
     printf("Message with token value %d delivery confirmed\n", dt);
     deliveredtoken = dt;
 }
 
-/*char* tratar_bool(bool value){
-	char valueAux[10];
-	snprintf (valueAux, 10, "%d", value);
-	return valueAux;
-}*/
 
 //////////////////////////////////////////////////////
 //// TRATAMENTO DE MENSAGENS
 //////////////////////////////////////////////////////
-int boolConversor(bool value){
-	if(value){
-		return 1;
-	}
-	if(!value){
-		return 0;
-	}
-	return -99;
-}
-
 void tratar(char topic[], int message) {
 	printf("****************************************\n");
 	printf("%s\n", topic);
 	printf("****************************************\n");
-	char valueAux[10] = "mdjj";
+	char valueAux[10];
 
 	if(strcmp(topic, TOPIC_AUTOMATIC_MODE_TOGGLE) == 0){
-		//printf("ANTES: %B", comp.automacaoTOGGLE);
-
 		int prox = !comp.automacaoTOGGLE;
 		comp.automacaoTOGGLE = prox;
-		printf("AGORA: %B", comp.automacaoTOGGLE);
-		printf("b");
-		int num = boolConversor(prox);
-		printf("VALOR DO BOOLEANO %d\n", boolConversor(prox));
-		//atualizarMongo("automatic_mode", 0, boolConversor(prox));
-		//printf("a");
-		// snprintf (valueAux, 10, "%d", message);
-		sprintf(valueAux, "%d", num);
-		publishMessage(client, &token, "AUTOMATICMODE/VALOR", valueAux);
-		//printf("///////// PUBLICOU /////////");
+		printf("VALUE NOW: %d\n", prox);
+		// atualizarMongo("automatic_mode", 0, prox);
+		snprintf(valueAux, 10, "%d", prox);
+		publishMessage(client, &token, TOPIC_AUTOMATIC_MODE_VALOR, valueAux);
 	}
 
 
@@ -569,7 +495,7 @@ void tratar(char topic[], int message) {
 		if(strcmp(topic, TOPIC_ILUMINACAO_JARDIM_TOGGLE) == 0){
 			bool prox = !comp.jardim.estado_atual;
 			comp.jardim.estado_atual = prox;
-			atualizarMongo("jardim_toggle", 1, message);
+			// atualizarMongo("jardim_toggle", 1, message);
 			snprintf (valueAux, 10, "%d", message);
 			publishMessage(client, &token, TOPIC_ILUMINACAO_JARDIM, valueAux);
 		}
@@ -577,7 +503,7 @@ void tratar(char topic[], int message) {
 		else if(strcmp(topic, TOPIC_ILUMINACAO_GARAGEM_TOGGLE) == 0){
 			bool prox = !comp.garagem.estado_atual;
 			comp.garagem.estado_atual = prox;
-			atualizarMongo("garagem_toggle", 1, message);
+			// atualizarMongo("garagem_toggle", 1, message);
 			snprintf (valueAux, 10, "%d", message);
 			publishMessage(client, &token, TOPIC_ILUMINACAO_GARAGEM, valueAux);
 		}
@@ -585,7 +511,7 @@ void tratar(char topic[], int message) {
 		else if(strcmp(topic, TOPIC_ILUMINACAO_INTERNO_TOGGLE) == 0){
 			bool prox = !comp.luzInterna.estado_atual;
 			comp.luzInterna.estado_atual = prox;
-			atualizarMongo("interno_toggle", 1, message);
+			// atualizarMongo("interno_toggle", 1, message);
 			snprintf (valueAux, 10, "%d", message);
 			publishMessage(client, &token, TOPIC_ILUMINACAO_INTERNO, valueAux);
 		}
@@ -594,7 +520,7 @@ void tratar(char topic[], int message) {
 			bool prox = !comp.alarme.estado_atual;
 			comp.alarme.estado_atual = prox;
 			inserirNovoEstadoAlarme(0, 0, 0);
-			atualizarMongo("alarme_toggle", 1, message);
+			// atualizarMongo("alarme_toggle", 1, message);
 			snprintf (valueAux, 10, "%d", message);
 			publishMessage(client, &token, TOPIC_ALARME, valueAux);
 		}
@@ -602,7 +528,7 @@ void tratar(char topic[], int message) {
 		else if(strcmp(topic, TOPIC_ARCONDICIONADO_TOGGLE) == 0){
 			bool prox = !comp.ac.estado_atual;
 			comp.ac.estado_atual = prox;
-			atualizarMongo("ac_toggle", 1, message);
+			// atualizarMongo("ac_toggle", 1, message);
 			snprintf (valueAux, 10, "%d", message);
 			publishMessage(client, &token, TOPIC_ARCONDICIONADO, valueAux);
 		}
@@ -611,59 +537,71 @@ void tratar(char topic[], int message) {
 		//FUNÇÕES SEM TOGGLE
 		if(strcmp(topic, TOPIC_ARCONDICIONADO_TEMPERATURA_MAX) == 0){
 			comp.ac.temp_max = message;
-			atualizarMongo("ac_temp_max", 0, message);
+			if(maxMinAtivo < 3){
+				maxMinAtivo++;
+			}
+			// atualizarMongo("ac_temp_max", 0, message);
 			snprintf (valueAux, 10, "%d", message);
 			publishMessage(client, &token, TOPIC_ARCONDICIONADO_MAX, valueAux);
 		}  
 		
 		else if(strcmp(topic, TOPIC_ARCONDICIONADO_TEMPERATURA_MIN) == 0){
 			comp.ac.temp_min = message;
-			atualizarMongo("ac_temp_min", 0, message);
+			if(maxMinAtivo < 3){
+				maxMinAtivo++;
+			}
+			// atualizarMongo("ac_temp_min", 0, message);
 			snprintf (valueAux, 10, "%d", message);
 			publishMessage(client, &token, TOPIC_ARCONDICIONADO_MIN, valueAux);
 		}  
 		
 		else if(strcmp(topic, TOPIC_AC_RESET) == 0){
 			comp.ac.alterar_operacao_default = message;
-			atualizarMongo("ac_reset", 1, message);
+			if(maxMinAtivo < 3 && message == 1){
+				maxMinAtivo++;
+			} else{
+				maxMinAtivo = 0;
+			}
+			// atualizarMongo("ac_reset", 1, message);
 			snprintf (valueAux, 10, "%d", message);
 			publishMessage(client, &token, TOPIC_AC_RESET, valueAux);
 		}  
 		
 		else if(strcmp(topic, TOPIC_ARCONDICIONADO_TEMPO_AUSENCIA_PESSOAS) == 0){
 			comp.ac.tempo_ausencia_pessoas = message;
-			atualizarMongo("ac_tempo_ausencia_pessoas", 0, message);
+			// atualizarMongo("ac_tempo_ausencia_pessoas", 0, message);
 			snprintf (valueAux, 10, "%d", message);
 			publishMessage(client, &token, TOPIC_ARCONDICIONADO_AUSENCIA_PESSOAS, valueAux);
 		}
 
 		else if(strcmp(topic, TOPIC_ILUMINACAO_JARDIM_HORARIO_MAXIMO) == 0){
 			comp.jardim.hora_maxima = message;
-			atualizarMongo("jardim_hora_max", 0, message);
+			// atualizarMongo("jardim_hora_max", 0, message);
 			snprintf (valueAux, 10, "%d", message);
 			publishMessage(client, &token, TOPIC_ILUMINACAO_JARDIM_MIN, valueAux);
 		}  
 		
 		else if(strcmp(topic, TOPIC_ILUMINACAO_JARDIM_HORARIO_MINIMO) == 0){
 			comp.jardim.hora_minima = message;
-			atualizarMongo("jardim_hora_min", 0, message);
+			// atualizarMongo("jardim_hora_min", 0, message);
 			snprintf (valueAux, 10, "%d", message);
 			publishMessage(client, &token, TOPIC_ILUMINACAO_JARDIM_MAX, valueAux);
 		}  
 		
 		else if(strcmp(topic, TOPIC_ILUMINACAO_GARAGEM_HORARIO_MAXIMO) == 0){
 			comp.garagem.hora_maxima = message;
-			atualizarMongo("garagem_hora_max", 0, message);
+			// atualizarMongo("garagem_hora_max", 0, message);
 			snprintf (valueAux, 10, "%d", message);
 			publishMessage(client, &token, TOPIC_ILUMINACAO_GARAGEM_MAX, valueAux);
 		}  
 		
 		else if(strcmp(topic, TOPIC_ILUMINACAO_GARAGEM_HORARIO_MINIMO) == 0){
 			comp.garagem.hora_minima = message;
-			atualizarMongo("garagem_hora_min", 0, message);
+			// atualizarMongo("garagem_hora_min", 0, message);
 			snprintf (valueAux, 10, "%d", message);
 			publishMessage(client, &token, TOPIC_ILUMINACAO_GARAGEM_MIN, valueAux);
 		}
+	
 	}
 }
 
@@ -698,12 +636,11 @@ int main() {
 	pinMode (BUTTON_JANELA, INPUT) ;*/
 	printf ("Pinos de botão foram configurados. \n") ;
 
-	int horario_ATUAL = p->tm_hour, rc;
+	int horario_ATUAL = p->tm_hour, rc, returnAC;
 	char valueAux[10];
 	bool alteracao = false, estadoCronometroAC = false;
 	bool temPessoas_ALARME = false, temPessoas_GARAGEM = false, temPessoas_AC = false, temPessoas_INTERNO = false, portasAbertas_ALARME = false, janelasAbertas_ALARME = false, horarioAtual_ATUALIZOU = false;
-	comp.automacaoTOGGLE = 0;
-	int returnAC;
+	comp.automacaoTOGGLE = 1;
 
 	rc = MQTTClient_create(&client, ADDRESS, ID, MQTTCLIENT_PERSISTENCE_NONE, NULL);
 
