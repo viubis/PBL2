@@ -3,13 +3,13 @@
 #include <string.h>
 #include "MQTTClient.h"
 #include <unistd.h>
-//#include <wiringPi.h>
+#include <wiringPi.h>
 #include <time.h>
 #include <stdbool.h>
 #include <locale.h>
-#include <mongoc/mongoc.h>
+/*#include <mongoc/mongoc.h>
 #include <bson/bson.h>
-#include <json-c/json.h>
+#include <json-c/json.h>*/
 
 // #define ADDRESS     "tcp://localhost:1883"
 //...................................................................
@@ -21,10 +21,10 @@
 #define QOS         2
 #define TIMEOUT     10000L
 #define KEEP_ALIVE  60
-#define CLIENT_DB	"mongodb+srv://mqttuefs20212:mqttuefs20212@historicalarmlogs.qjple.mongodb.net/myFirstDatabase?retryWrites=true&w=majority"
+/*#define CLIENT_DB	"mongodb+srv://mqttuefs20212:mqttuefs20212@historicalarmlogs.qjple.mongodb.net/myFirstDatabase?retryWrites=true&w=majority"
 #define DATABASE_DB					"historic_logs"
 #define COLLECTION_LOG_ALARMS_DB	"alarm_logs"
-#define COLLECTION_LOG_TOPICS_DB	"last_logs_all_topics"
+#define COLLECTION_LOG_TOPICS_DB	"last_logs_all_topics"*/
 
 volatile MQTTClient_deliveryToken deliveredtoken;
 
@@ -68,12 +68,12 @@ volatile MQTTClient_deliveryToken deliveredtoken;
 #define TOPIC_AUTOMATIC_MODE_TOGGLE "AUTOMATICMODE/TOGGLE"
 
 //Entradas Switchs e buttons
-/*#define SWITCH_PRESENCA_SALA 4 
+#define SWITCH_PRESENCA_SALA 4 
 #define SWITCH_PRESENCA_GARAGEM 17
 #define SWITCH_PRESENCA_INTERNO 27
 #define SWITCH_ALARME 22
 #define BUTTON_PORTA 5
-#define BUTTON_JANELA 19*/
+#define BUTTON_JANELA 19
 
 /////////////////////////////////////////////////////
 // CLIENT E TOKEN
@@ -143,7 +143,7 @@ typedef struct {
 
 
 // VARIÃVEIS GLOBAIS
-mongoc_client_t *client_mongo;
+/*mongoc_client_t *client_mongo;
 mongoc_collection_t *collection_alarm, *collection_topics;
 //mongoc_collection_t *collection;
 bson_error_t error;
@@ -152,7 +152,7 @@ bson_t *doc, *query;
 mongoc_cursor_t *cursor;
 struct json_object *parsed_json;
 struct json_object *data_json;
-size_t len;
+size_t len;*/
 
 struct tm *p;
 time_t seconds;
@@ -160,7 +160,7 @@ time_t desligar_em = 0;
 char *str;
 int TEMPERATURA_EXTERNA;
 bool MENSAGEM_RECEBIDA = false;
-int maxMinAtivo = 0; defaultRecebido = 0;
+int maxMinAtivo = 0, defaultRecebido = 0;
 Components comp;
 
 
@@ -200,7 +200,7 @@ void subscribeTo(MQTTClient client){
 
 // ATUALIZA DB COM OS VALORES DOS LOGS ATUAIS
 // type 0 = INT, type 1 =BOOL
-void atualizarMongo(char key[], int type, int value){
+/*void atualizarMongo(char key[], int type, int value){
 	//collection = mongoc_client_get_collection (client_mongo, DATABASE_DB, COLLECTION_LOG_TOPICS_DB);
 	query=bson_new();
 	BSON_APPEND_UTF8(query,"id","6164a7695a312709b0574e52");
@@ -299,16 +299,16 @@ void inserirNovoEstadoAlarme(bool peopleAlarm, bool doorsAlert, bool windowsAler
 	if (!mongoc_collection_insert_one (collection_alarm, doc, NULL, NULL, &error)) {
         fprintf (stderr, "%s\n", error.message);
     }
-}
+}*/
 
 void finishConnection(MQTTClient client){
-	bson_destroy(query);
+	/*bson_destroy(query);
     bson_destroy(doc);
 	mongoc_collection_destroy(collection_alarm);
 	mongoc_collection_destroy(collection_topics);
 	//mongoc_collection_destroy(collection);
     mongoc_client_destroy(client_mongo);
-    mongoc_cleanup();
+    mongoc_cleanup();*/
 		
   	MQTTClient_disconnect(client, 10000);
   	MQTTClient_destroy(&client);
@@ -323,8 +323,8 @@ void alarme(bool temPessoas, bool portasAbertas, bool jarnelasAbertas){
 	} else {
 		comp.alarme.estado_atual = 0;
 	}
-	inserirNovoEstadoAlarme(temPessoas, portasAbertas, jarnelasAbertas);
-	atualizarMongo("alarme_toggle", 1, comp.alarme.estado_atual);
+	//inserirNovoEstadoAlarme(temPessoas, portasAbertas, jarnelasAbertas);
+	//atualizarMongo("alarme_toggle", 1, comp.alarme.estado_atual);
 }
 
 // ILUMINAÃ‡ÃƒO DOS AMBIENTES INTERNOS
@@ -336,7 +336,7 @@ void iluminacaoAmbientesInternos(bool temPessoas){
 		comp.luzInterna.estado_atual = 0;
 		printf("IluminaÃ§Ã£o do ambiente desligada.\n");
 	}
-	atualizarMongo("interno_toggle", 1, comp.luzInterna.estado_atual);
+	//atualizarMongo("interno_toggle", 1, comp.luzInterna.estado_atual);
 }
 
 // ILUMINAÃ‡ÃƒO DA GARAGEM
@@ -353,7 +353,7 @@ void iluminacaoGaragem(int horaAtual, bool temPessoas){
 		comp.garagem.estado_atual = 0;
 		printf("IluminaÃ§Ã£o da garagem desligada.\n");
 	}
-	atualizarMongo("garagem_toggle", 1, comp.garagem.estado_atual);
+	//atualizarMongo("garagem_toggle", 1, comp.garagem.estado_atual);
 }
 
 // ILUMINAÃ‡ÃƒO DO JARDIM
@@ -364,7 +364,7 @@ void iluminacaoJardim(int horaAtual){
 	} else {
 		comp.jardim.estado_atual = 0;
 	}
-	atualizarMongo("jardim_toggle", 1, comp.jardim.estado_atual);
+	//atualizarMongo("jardim_toggle", 1, comp.jardim.estado_atual);
 }
 
 // SISTEMA DO AR CONDICIONADO
@@ -408,7 +408,7 @@ int arCondicionado(bool temPessoas){
 	}
 	if(comp.ac.estado_atual && comp.ac.alterar_operacao_default){
 		if( comp.ac.temp_atual < comp.ac.temp_min || comp.ac.temp_atual > comp.ac.temp_max ){
-			atualizarMongo("ac_toggle", 1, 0);
+			//atualizarMongo("ac_toggle", 1, 0);
 			return 1;
 			/*if( comp.ac.temp_atual >= comp.ac.temp_min || comp.ac.temp_atual <= comp.ac.temp_max ) {
 				comp.ac.estado_atual = 1;
@@ -419,7 +419,7 @@ int arCondicionado(bool temPessoas){
 		}
 	} else {
 		if(comp.ac.estado_atual && comp.ac.temp_atual >= 17){
-			atualizarMongo("ac_toggle", 1, 0);
+			//atualizarMongo("ac_toggle", 1, 0);
 			return 1;
 			/*if(comp.ac.temp_atual < 17) {
 				comp.ac.estado_atual = 1;
@@ -434,7 +434,7 @@ int arCondicionado(bool temPessoas){
 		return 2;
 		//comp.ac.estado_atual = 0;
 	}
-	atualizarMongo("ac_toggle", 1, comp.ac.estado_atual);
+	//atualizarMongo("ac_toggle", 1, comp.ac.estado_atual);
 	return 0;
 }
 
@@ -460,7 +460,7 @@ void verificarArCondicionado(int returnAC){
 			comp.ac.estado_atual = 0;
 		}
 	}
-	atualizarMongo("ac_toggle", 1, comp.ac.estado_atual);
+	//atualizarMongo("ac_toggle", 1, comp.ac.estado_atual);
 }
 
 
@@ -519,7 +519,7 @@ void tratar(char topic[], int message) {
 		else if(strcmp(topic, TOPIC_ALARME_TOGGLE) == 0){
 			bool prox = !comp.alarme.estado_atual;
 			comp.alarme.estado_atual = prox;
-			inserirNovoEstadoAlarme(0, 0, 0);
+			//inserirNovoEstadoAlarme(0, 0, 0);
 			// atualizarMongo("alarme_toggle", 1, message);
 			snprintf (valueAux, 10, "%d", message);
 			publishMessage(client, &token, TOPIC_ALARME, valueAux);
@@ -619,21 +619,36 @@ int onMessageArrived(void *context, char *topicName, int topicLen, MQTTClient_me
 
 int main() {
 	MQTTClient_connectOptions conn_opts = MQTTClient_connectOptions_initializer;
-	mongoc_init();
+	/*mongoc_init();
 	client_mongo = mongoc_client_new (CLIENT_DB);
 	collection_topics = mongoc_client_get_collection (client_mongo, DATABASE_DB, COLLECTION_LOG_TOPICS_DB);
 	collection_alarm = mongoc_client_get_collection (client_mongo, DATABASE_DB, COLLECTION_LOG_ALARMS_DB);
-	recuperaMongo();
+	recuperaMongo();*/
+	comp.ac.estado_atual = true;
+	comp.ac.temp_atual = 16;
+	comp.ac.temp_max = 18;
+	comp.ac.temp_min = 21;
+	comp.ac.tempo_ausencia_pessoas = 10;
+	comp.ac.alterar_operacao_default = 0;
+	comp.jardim.estado_atual = false;
+	comp.jardim.hora_maxima = 23;
+	comp.jardim.hora_minima = 18;
+	comp.garagem.estado_atual = false;
+	comp.garagem.hora_maxima = 06;
+	comp.garagem.hora_minima = 18;
+	comp.luzInterna.estado_atual = false;
+	comp.alarme.estado_atual = false;
+	comp.automacaoTOGGLE = true;
 	time(&seconds);
 	p = localtime(&seconds);
-	/*wiringPiSetupGpio () ;
+	wiringPiSetupGpio () ;
 
 	pinMode (SWITCH_PRESENCA_SALA, INPUT) ;
 	pinMode (SWITCH_PRESENCA_GARAGEM, INPUT) ;
 	pinMode (SWITCH_PRESENCA_INTERNO, INPUT) ;
 	pinMode (SWITCH_ALARME, INPUT) ;
 	pinMode (BUTTON_PORTA, INPUT) ;
-	pinMode (BUTTON_JANELA, INPUT) ;*/
+	pinMode (BUTTON_JANELA, INPUT) ;
 	printf ("Pinos de botão foram configurados. \n") ;
 
 	int horario_ATUAL = p->tm_hour, rc, returnAC;
@@ -689,13 +704,13 @@ int main() {
 				horarioAtual_ATUALIZOU = true;
 			}
 
-			/*comp.estadoAtualAmbientes.estado_presenca_sala_atual = digitalRead(SWITCH_PRESENCA_SALA);
+			comp.estadoAtualAmbientes.estado_presenca_sala_atual = digitalRead(SWITCH_PRESENCA_SALA);
 			comp.estadoAtualAmbientes.estado_presenca_garagem_atual = digitalRead(SWITCH_PRESENCA_GARAGEM);
 			comp.estadoAtualAmbientes.estado_presenca_interna_atual= digitalRead(SWITCH_PRESENCA_INTERNO);
 			comp.estadoAtualAmbientes.estado_alarme_atual= digitalRead(SWITCH_ALARME);
 			comp.estadoAtualAmbientes.estado_janela_atual = digitalRead(BUTTON_JANELA);
-			comp.estadoAtualAmbientes.estado_porta_atual= digitalRead(BUTTON_PORTA);*/
-			comp.estadoAtualAmbientes.estado_presenca_sala_atual = (rand() > RAND_MAX / 2);
+			comp.estadoAtualAmbientes.estado_porta_atual= digitalRead(BUTTON_PORTA);
+			/*comp.estadoAtualAmbientes.estado_presenca_sala_atual = (rand() > RAND_MAX / 2);
 			comp.estadoAtualAmbientes.estado_presenca_garagem_atual = (rand() > RAND_MAX / 2);
 			comp.estadoAtualAmbientes.estado_presenca_interna_atual= (rand() > RAND_MAX / 2);
 			comp.estadoAtualAmbientes.estado_alarme_atual= (rand() > RAND_MAX / 2);
