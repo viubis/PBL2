@@ -632,14 +632,14 @@ int main() {
 	comp.automacaoTOGGLE = true;
 	time(&seconds);
 	p = localtime(&seconds);
-	wiringPiSetupGpio () ;
+	/*wiringPiSetupGpio () ;
 
 	pinMode (SWITCH_PRESENCA_SALA, INPUT) ;
 	pinMode (SWITCH_PRESENCA_GARAGEM, INPUT) ;
 	pinMode (SWITCH_PRESENCA_INTERNO, INPUT) ;
 	pinMode (SWITCH_ALARME, INPUT) ;
 	pinMode (BUTTON_PORTA, INPUT) ;
-	pinMode (BUTTON_JANELA, INPUT) ;
+	pinMode (BUTTON_JANELA, INPUT) ;*/
 	printf ("Pinos de botão foram configurados. \n") ;
 
 	int horario_ATUAL = p->tm_hour, rc, returnAC;
@@ -695,13 +695,13 @@ int main() {
 				horarioAtual_ATUALIZOU = true;
 			}
 
-			comp.estadoAtualAmbientes.estado_presenca_sala_atual = digitalRead(SWITCH_PRESENCA_SALA);
+			/*comp.estadoAtualAmbientes.estado_presenca_sala_atual = digitalRead(SWITCH_PRESENCA_SALA);
 			comp.estadoAtualAmbientes.estado_presenca_garagem_atual = digitalRead(SWITCH_PRESENCA_GARAGEM);
 			comp.estadoAtualAmbientes.estado_presenca_interna_atual= digitalRead(SWITCH_PRESENCA_INTERNO);
 			comp.estadoAtualAmbientes.estado_alarme_atual= digitalRead(SWITCH_ALARME);
 			comp.estadoAtualAmbientes.estado_janela_atual = digitalRead(BUTTON_JANELA);
-			comp.estadoAtualAmbientes.estado_porta_atual= digitalRead(BUTTON_PORTA);
-			/*comp.estadoAtualAmbientes.estado_presenca_sala_atual = (rand() > RAND_MAX / 2);
+			comp.estadoAtualAmbientes.estado_porta_atual= digitalRead(BUTTON_PORTA);*/
+			comp.estadoAtualAmbientes.estado_presenca_sala_atual = (rand() > RAND_MAX / 2);
 			comp.estadoAtualAmbientes.estado_presenca_garagem_atual = (rand() > RAND_MAX / 2);
 			comp.estadoAtualAmbientes.estado_presenca_interna_atual= (rand() > RAND_MAX / 2);
 			comp.estadoAtualAmbientes.estado_alarme_atual= (rand() > RAND_MAX / 2);
