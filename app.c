@@ -4,6 +4,7 @@
 #include "MQTTClient.h"
 #include <unistd.h>
 #include <wiringPi.h>
+#include <lcd.h>
 #include <time.h>
 #include <stdbool.h>
 #include <locale.h>
@@ -30,21 +31,16 @@ volatile MQTTClient_deliveryToken deliveredtoken;
 #define TOPIC_ILUMINACAO_JARDIM "JARDIM/ILUMINACAO/VALOR"
 #define TOPIC_ILUMINACAO_JARDIM_MAX "JARDIM/ILUMINACAO/HORAMAX"
 #define TOPIC_ILUMINACAO_JARDIM_MIN "JARDIM/ILUMINACAO/HORAMIN"
-
 #define TOPIC_ILUMINACAO_INTERNO "INTERNO/ILUMINACAO/VALOR"
-
 #define TOPIC_ILUMINACAO_GARAGEM "GARAGEM/ILUMINACAO/VALOR"
 #define TOPIC_ILUMINACAO_GARAGEM_MAX "GARAGEM/ILUMINACAO/HORAMAX"
 #define TOPIC_ILUMINACAO_GARAGEM_MIN "GARAGEM/ILUMINACAO/HORAMIN"
-
 #define TOPIC_ARCONDICIONADO "AC/VALOR"
 #define TOPIC_ARCONDICIONADO_TEMPERATURA "AC/TEMPERATURA"
 #define TOPIC_ARCONDICIONADO_MAX "AC/TEMPERATURAMAX "
 #define TOPIC_ARCONDICIONADO_MIN "AC/TEMPERATURAMIN"
 #define TOPIC_ARCONDICIONADO_AUSENCIA_PESSOAS "AC/TEMPOAUSENCIAPESSOAS"
-
 #define TOPIC_ALARME "ALARME/VALOR"
-
 #define TOPIC_AUTOMATIC_MODE_VALOR "AUTOMATICMODE/VALOR"
 
 
@@ -71,6 +67,14 @@ volatile MQTTClient_deliveryToken deliveredtoken;
 #define SWITCH_ALARME 22
 #define BUTTON_PORTA 5
 #define BUTTON_JANELA 19
+
+//Conf LCD
+#define LCD_RS  25               //Register select pin
+#define LCD_E   1                //Enable Pin
+#define LCD_D4  12               //Data pin 4
+#define LCD_D5  16               //Data pin 5
+#define LCD_D6  20               //Data pin 6
+#define LCD_D7  21               //Data pin 7
 
 /////////////////////////////////////////////////////
 // CLIENT E TOKEN
@@ -312,6 +316,10 @@ void alarme(bool temPessoas, bool portasAbertas, bool janelasAbertas){
 		printf("Atual: %d\n", ativo);
 		//Aqui ele vai dizer que alterou
 		if(ativo == 1){
+			lcdClear(lcd);
+    		lcdPuts(lcd, "Alarme:");
+    		lcdPosition(lcd, 4, 1);
+    		lcdPuts(lcd, "Ativo");
 			printf("Sai­da do alarme por PRESENCA DE INTRUSOS, PORTAS E/OU JANELAS ABERTAS.\n");
 		}
 		
@@ -340,8 +348,16 @@ void iluminacaoAmbientesInternos(bool temPessoas){
 
 		//Aqui ele vai dizer que alterou
 		if(ativo == 1){
+			lcdClear(lcd);
+    		lcdPuts(lcd, "Luz interna:");
+    		lcdPosition(lcd, 4, 1);
+    		lcdPuts(lcd, "Ativo");
 			printf("Iluminacao do ambiente interno ligada.\n");
 		}else {
+			lcdClear(lcd);
+    		lcdPuts(lcd, "Luz interna:");
+    		lcdPosition(lcd, 4, 1);
+    		lcdPuts(lcd, "Desligada");
 			printf("Iluminaco do ambiente interno desligada.\n");
 		}
 			
@@ -368,8 +384,16 @@ void iluminacaoGaragem(int horaAtual, bool temPessoas){
 		comp.garagem.estado_atual = ativo;
 
 		if(ativo == 1){
+			lcdClear(lcd);
+    		lcdPuts(lcd, "Garagem:");
+    		lcdPosition(lcd, 4, 1);
+    		lcdPuts(lcd, "luz ativa");
 			printf("Iluminacao do ambiente ligada.\n");
 		}else {
+			lcdClear(lcd);
+    		lcdPuts(lcd, "Garagem:");
+    		lcdPosition(lcd, 4, 1);
+    		lcdPuts(lcd, "luz desativada");
 			printf("Iluminaco do ambiente desligada.\n");
 		}
 
@@ -394,8 +418,16 @@ void iluminacaoJardim(int horaAtual){
 		comp.jardim.estado_atual = ativo;
 
 		if(ativo == 1){
+			lcdClear(lcd);
+    		lcdPuts(lcd, "Luz jardim:");
+    		lcdPosition(lcd, 4, 1);
+    		lcdPuts(lcd, "Ativa");
 			printf("Iluminacao do Jardim ligada.\n");
 		}else {
+			lcdClear(lcd);
+    		lcdPuts(lcd, "Luz jardim:");
+    		lcdPosition(lcd, 4, 1);
+    		lcdPuts(lcd, "Desligado");
 			printf("Iluminacao do Jardim desligada.\n");
 		}
 
@@ -463,8 +495,16 @@ void verificarArCondicionado(int returnAC){
 		if( comp.ac.temp_atual >= comp.ac.temp_min || comp.ac.temp_atual <= comp.ac.temp_max ) {
 			comp.ac.estado_atual = 1;
 			prox = 1;
+			lcdClear(lcd);
+			lcdPuts(lcd, "AR:");
+			lcdPosition(lcd, 4, 1);
+			lcdPuts(lcd, "Ligado");
 			printf("Ar condicionado ligado.\n");
 		} else {
+			lcdClear(lcd);
+    		lcdPuts(lcd, "AR:");
+    		lcdPosition(lcd, 4, 1);
+			lcdPuts(lcd, "Desligado");
 			printf("Ar condicionado desligado.\n");
 			comp.ac.estado_atual = 0;
 			prox = 0;
@@ -473,8 +513,16 @@ void verificarArCondicionado(int returnAC){
 		if(comp.ac.estado_atual && comp.ac.temp_atual < 17) {
 			comp.ac.estado_atual = 1;
 			prox = 1;
+			lcdClear(lcd);
+			lcdPuts(lcd, "AR:");
+			lcdPosition(lcd, 4, 1);
+			lcdPuts(lcd, "Ligado");
 			printf("Ar condicionado ligado.\n");
 		} else {
+			lcdClear(lcd);
+    		lcdPuts(lcd, "AR:");
+    		lcdPosition(lcd, 4, 1);
+			lcdPuts(lcd, "Desligado");
 			printf("Ar condicionado desligado.\n");
 			comp.ac.estado_atual = 0;
 			prox = 0;
