@@ -571,40 +571,98 @@ void onMessageDelivered(void *context, MQTTClient_deliveryToken dt){
 //// TRATAMENTO DE MENSAGENS
 //////////////////////////////////////////////////////
 void tratar(char topic[], int message) {
+
+	// SETANDO O MODO AUTOMÁTICO, TOGGLE, LIGADO OU DESLIGADO 
 	if(strcmp(topic, TOPIC_AUTOMATIC_MODE_TOGGLE) == 0){
 		int prox = !comp.automacaoTOGGLE;
 		comp.automacaoTOGGLE = prox;
 		TEM_MENSAGEM = 1;
 	}
+	if(strcmp(topic, TOPIC_AUTOMATIC_MODE_LIGADO) == 0){
+		comp.automacaoTOGGLE = true;
+		TEM_MENSAGEM = 1;
+	}
+	if(strcmp(topic, TOPIC_AUTOMATIC_MODE_DESLIGADO) == 0){
+		comp.automacaoTOGGLE = false;
+		TEM_MENSAGEM = 1;
+	}
+
 	if(!comp.automacaoTOGGLE){
 		//FUNÇÕES DE TOGGLE
+		// ILUMINAÇÃO DO JARDIM TOGGLE, LIGADO E DESLIGADO
+		
+		
 		if(strcmp(topic, TOPIC_ILUMINACAO_JARDIM_TOGGLE) == 0){
 			bool prox = !comp.jardim.estado_atual;
 			comp.jardim.estado_atual = prox;
 			TEM_MENSAGEM = 2;
 		}
+		else if(strcmp(topic, TOPIC_ILUMINACAO_JARDIM_LIGADO) == 0){
+			comp.jardim.estado_atual = true;
+			TEM_MENSAGEM = 2;
+		}
+		else if(strcmp(topic, TOPIC_ILUMINACAO_JARDIM_DESLIGADO) == 0){
+			comp.jardim.estado_atual = false;
+			TEM_MENSAGEM = 2;
+		}
 		
+		// ILUMINAÇÃO DA GARAGEM TOGGLE, LIGADO E DESLIGADO
 		else if(strcmp(topic, TOPIC_ILUMINACAO_GARAGEM_TOGGLE) == 0){
 			bool prox = !comp.garagem.estado_atual;
 			comp.garagem.estado_atual = prox;
 			TEM_MENSAGEM = 3;
 		}
+		else if(strcmp(topic, TOPIC_ILUMINACAO_GARAGEM_LIGADO) == 0){
+			comp.garagem.estado_atual = true;
+			TEM_MENSAGEM = 3;
+		}
+		else if(strcmp(topic, TOPIC_ILUMINACAO_GARAGEM_DESLIGADO) == 0){
+			comp.garagem.estado_atual = false;
+			TEM_MENSAGEM = 3;
+		}
 		
+		// ILUMINAÇÃO INTERNA, TOGLLE, LIGADO, DESLIGADO
 		else if(strcmp(topic, TOPIC_ILUMINACAO_INTERNO_TOGGLE) == 0){
 			bool prox = !comp.luzInterna.estado_atual;
 			comp.luzInterna.estado_atual = prox;
 			TEM_MENSAGEM = 4;
 		}
-		
+		else if(strcmp(topic, TOPIC_ILUMINACAO_INTERNO_LIGADO) == 0){
+			comp.luzInterna.estado_atual = true;
+			TEM_MENSAGEM = 4;
+		}
+		else if(strcmp(topic, TOPIC_ILUMINACAO_INTERNO_DESLIGADO) == 0){
+			comp.luzInterna.estado_atual = false;
+			TEM_MENSAGEM = 4;
+		}		
+
+		// ALARME, TOGGLE, LIGADO E DESLIGADO
 		else if(strcmp(topic, TOPIC_ALARME_TOGGLE) == 0){
 			bool prox = !comp.alarme.estado_atual;
 			comp.alarme.estado_atual = prox;
 			TEM_MENSAGEM = 5;
 		}
+		else if(strcmp(topic, TOPIC_ALARME_LIGADO) == 0){
+			comp.alarme.estado_atual = true;
+			TEM_MENSAGEM = 5;
+		}
+		else if(strcmp(topic, TOPIC_ALARME_DESLIGADO) == 0){
+			comp.alarme.estado_atual = false;
+			TEM_MENSAGEM = 5;
+		}
 		
+		// AR CONDICIONADO TOGGLE, LIGA E DESLIGA
 		else if(strcmp(topic, TOPIC_ARCONDICIONADO_TOGGLE) == 0){
 			bool prox = !comp.ac.estado_atual;
 			comp.ac.estado_atual = prox;
+			TEM_MENSAGEM = 6;
+		}
+		else if(strcmp(topic, TOPIC_ARCONDICIONADO_LIGADO) == 0){
+			comp.ac.estado_atual = true;
+			TEM_MENSAGEM = 6;
+		}
+		else if(strcmp(topic, TOPIC_ARCONDICIONADO_DESLIGADO) == 0){
+			comp.ac.estado_atual = false;
 			TEM_MENSAGEM = 6;
 		}
 
