@@ -93,7 +93,7 @@ volatile MQTTClient_deliveryToken deliveredtoken;
 /////////////////////////////////////////////////////
 MQTTClient client;
 int TEM_MENSAGEM = -1;
-
+int lcd;
 
 // ESTADOS
 typedef struct {
@@ -134,6 +134,11 @@ typedef struct {
 	int alarme;
 	int porta;
 	int janela;
+	int ligaInterno;
+	int ligaJardim;
+	int ligaGaragem;
+	int ligaAr;
+	int ligaAlarme;
 } EstadosInputs;
 
 typedef struct {
@@ -324,12 +329,16 @@ void finishConnection(MQTTClient client){
 
 
 // SISTEMA DE ALARME
-void alarme(bool temPessoas, bool portasAbertas, bool janelasAbertas){
+void alarme(bool temPessoas, bool portasAbertas, bool janelasAbertas, bool alarmeAtivo){
 	char valueAux[10];
 	int ativo = 0;
 
-	if(temPessoas || portasAbertas || janelasAbertas){
+	if((temPessoas || portasAbertas || janelasAbertas) && (alarmeAtivo == true)){
 		ativo = 1;
+		lcdClear(lcd);
+    	lcdPuts(lcd, "Alarme:");
+    	lcdPosition(lcd, 4, 1);
+    	lcdPuts(lcd, "Ativo");
 	}
 
 	// ESTADO DIFERENTE DO ESTADO ATUAL, REQUER MUDANÇA
@@ -340,10 +349,6 @@ void alarme(bool temPessoas, bool portasAbertas, bool janelasAbertas){
 		printf("Atual: %d\n", ativo);
 		//Aqui ele vai dizer que alterou
 		if(ativo == 1){
-			lcdClear(lcd);
-    		lcdPuts(lcd, "Alarme:");
-    		lcdPosition(lcd, 4, 1);
-    		lcdPuts(lcd, "Ativo");
 			printf("Sai­da do alarme por PRESENCA DE INTRUSOS, PORTAS E/OU JANELAS ABERTAS.\n");
 		}
 		
@@ -880,7 +885,7 @@ int main() {
 	///		CONFIGURAÇÃO DO PIN NA RASP
 	///////////////////////////////////////////////
 	wiringPiSetupGpio () ;
-
+	lcd = lcdInit(2, 16, 4, LCD_RS, LCD_E, LCD_D4, LCD_D5, LCD_D6, LCD_D7,0,0,0,0);
 	pinMode(SWITCH_PRESENCA_SALA, INPUT);
 	pinMode(SWITCH_PRESENCA_GARAGEM, INPUT);
 	pinMode(SWITCH_PRESENCA_INTERNO, INPUT);
@@ -924,6 +929,14 @@ int main() {
 			comp.estados_inputs.janela = getInput(!BUTTON_PORTA);
 		//////////////////////////////////////////////////////////////////////////
 
+		// entradas de input de voz
+			comp.estados_inputs.ligaAlarme = 1;
+			comp.estados_inputs.ligaAr = 1;
+			comp.estados_inputs.ligaGaragem = 1;
+			comp.estados_inputs.ligaInterno = 1;
+			comp.estados_inputs.ligaJardim = 1;
+		//
+
 			temPessoas_ALARME = (comp.estados_inputs.sala == 1 || comp.estados_inputs.garagem == 1|| comp.estados_inputs.interno == 1);
 			portasAbertas_ALARME = comp.estados_inputs.porta == 1;
 			janelasAbertas_ALARME = comp.estados_inputs.janela == 1;
@@ -932,7 +945,7 @@ int main() {
 			temPessoas_AC = comp.estados_inputs.garagem == 1;
 
 
-			alarme(temPessoas_ALARME, portasAbertas_ALARME, janelasAbertas_ALARME);
+			alarme(temPessoas_ALARME, portasAbertas_ALARME, janelasAbertas_ALARME, comp.estados_inputs.alarme);
 			iluminacaoAmbientesInternos(temPessoas_INTERNO);
 			iluminacaoGaragem(horario_ATUAL, temPessoas_GARAGEM);
 			iluminacaoJardim(horario_ATUAL);
