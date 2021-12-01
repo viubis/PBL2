@@ -645,10 +645,20 @@ void tratar(char topic[], int message) {
 		else if(strcmp(topic, TOPIC_ILUMINACAO_JARDIM_LIGADO) == 0){
 			comp.jardim.estado_atual = true;
 			TEM_MENSAGEM = 2;
+			lcdClear(lcd);
+			lcdPuts(lcd, "Jardim:");
+			lcdPosition(lcd, 4, 1);
+			lcdPuts(lcd, "ligado");
+			printf("Jardim ligado.\n");
 		}
 		else if(strcmp(topic, TOPIC_ILUMINACAO_JARDIM_DESLIGADO) == 0){
 			comp.jardim.estado_atual = false;
 			TEM_MENSAGEM = 2;
+			lcdClear(lcd);
+			lcdPuts(lcd, "Jardim:");
+			lcdPosition(lcd, 4, 1);
+			lcdPuts(lcd, "desligado");
+			printf("Jardim desligado.\n");
 		}
 		
 		// ILUMINAÇÃO DA GARAGEM TOGGLE, LIGADO E DESLIGADO
@@ -660,10 +670,20 @@ void tratar(char topic[], int message) {
 		else if(strcmp(topic, TOPIC_ILUMINACAO_GARAGEM_LIGADO) == 0){
 			comp.garagem.estado_atual = true;
 			TEM_MENSAGEM = 3;
+			lcdClear(lcd);
+			lcdPuts(lcd, "Garagem:");
+			lcdPosition(lcd, 4, 1);
+			lcdPuts(lcd, "ligado");
+			printf("Garagem ligado.\n");
 		}
 		else if(strcmp(topic, TOPIC_ILUMINACAO_GARAGEM_DESLIGADO) == 0){
 			comp.garagem.estado_atual = false;
 			TEM_MENSAGEM = 3;
+			lcdClear(lcd);
+			lcdPuts(lcd, "Garagem:");
+			lcdPosition(lcd, 4, 1);
+			lcdPuts(lcd, "desligado");
+			printf("Garagem desligado.\n");
 		}
 		
 		// ILUMINAÇÃO INTERNA, TOGLLE, LIGADO, DESLIGADO
