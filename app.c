@@ -645,20 +645,10 @@ void tratar(char topic[], int message) {
 		else if(strcmp(topic, TOPIC_ILUMINACAO_JARDIM_LIGADO) == 0){
 			comp.jardim.estado_atual = true;
 			TEM_MENSAGEM = 2;
-			lcdClear(lcd);
-			lcdPuts(lcd, "Jardim:");
-			lcdPosition(lcd, 4, 1);
-			lcdPuts(lcd, "ligado");
-			printf("Jardim ligado.\n");
 		}
 		else if(strcmp(topic, TOPIC_ILUMINACAO_JARDIM_DESLIGADO) == 0){
 			comp.jardim.estado_atual = false;
 			TEM_MENSAGEM = 2;
-			lcdClear(lcd);
-			lcdPuts(lcd, "Jardim:");
-			lcdPosition(lcd, 4, 1);
-			lcdPuts(lcd, "desligado");
-			printf("Jardim desligado.\n");
 		}
 		
 		// ILUMINAÇÃO DA GARAGEM TOGGLE, LIGADO E DESLIGADO
@@ -670,20 +660,10 @@ void tratar(char topic[], int message) {
 		else if(strcmp(topic, TOPIC_ILUMINACAO_GARAGEM_LIGADO) == 0){
 			comp.garagem.estado_atual = true;
 			TEM_MENSAGEM = 3;
-			lcdClear(lcd);
-			lcdPuts(lcd, "Garagem:");
-			lcdPosition(lcd, 4, 1);
-			lcdPuts(lcd, "ligado");
-			printf("Garagem ligado.\n");
 		}
 		else if(strcmp(topic, TOPIC_ILUMINACAO_GARAGEM_DESLIGADO) == 0){
 			comp.garagem.estado_atual = false;
 			TEM_MENSAGEM = 3;
-			lcdClear(lcd);
-			lcdPuts(lcd, "Garagem:");
-			lcdPosition(lcd, 4, 1);
-			lcdPuts(lcd, "desligado");
-			printf("Garagem desligado.\n");
 		}
 		
 		// ILUMINAÇÃO INTERNA, TOGLLE, LIGADO, DESLIGADO
@@ -814,6 +794,19 @@ void backlog(){
 			}else if(TEM_MENSAGEM == 2){
 				snprintf (valueAux, 10, "%d", comp.jardim.estado_atual);
 				publishMessage(client, TOPIC_ILUMINACAO_JARDIM, valueAux);
+				if(comp.jardim.estado_atual == 1){
+					lcdClear(lcd);
+					lcdPuts(lcd, "Jardim:");
+					lcdPosition(lcd, 4, 1);
+					lcdPuts(lcd, "ligado");
+					printf("Jardim ligado.\n");
+				}else{
+					lcdClear(lcd);
+					lcdPuts(lcd, "Jardim:");
+					lcdPosition(lcd, 4, 1);
+					lcdPuts(lcd, "desligado");
+					printf("Jardim desligado.\n");
+				}
 				//atualizarMongo("jardim_toggle", 1, comp.jardim.estado_atual);
 				ALTERACAO_LOGS = 1;
 				printf("VALOR JARDIM %d", comp.jardim.estado_atual);
@@ -825,6 +818,20 @@ void backlog(){
 			}else if(TEM_MENSAGEM == 4){
 				snprintf (valueAux, 10, "%d", comp.luzInterna.estado_atual);
 				publishMessage(client, TOPIC_ILUMINACAO_INTERNO, valueAux);
+				if(comp.luzInterna.estado_atual == 1){
+					lcdClear(lcd);
+					lcdPuts(lcd, "Luz interna:");
+					lcdPosition(lcd, 4, 1);
+					lcdPuts(lcd, "ligado");
+					printf("Luz interna ligado.\n");
+				}else{
+					lcdClear(lcd);
+					lcdPuts(lcd, "Luz interna:");
+					lcdPosition(lcd, 4, 1);
+					lcdPuts(lcd, "desligado");
+					printf("Luz interna desligado.\n");
+				
+				}
 				//atualizarMongo("interno_toggle", 1, comp.luzInterna.estado_atual);
 				ALTERACAO_LOGS = 1;
 			}else if(TEM_MENSAGEM == 5){
