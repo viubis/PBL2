@@ -813,6 +813,20 @@ void backlog(){
 			}else if(TEM_MENSAGEM == 3){
 				snprintf (valueAux, 10, "%d", comp.garagem.estado_atual);
 				publishMessage(client, TOPIC_ILUMINACAO_GARAGEM, valueAux);
+				if(comp.garagem.estado_atual == 1){
+					lcdClear(lcd);
+					lcdPuts(lcd, "Garagem:");
+					lcdPosition(lcd, 4, 1);
+					lcdPuts(lcd, "ligado");
+					printf("Luz garagem ligado.\n");
+				}else{
+					lcdClear(lcd);
+					lcdPuts(lcd, "Garagem:");
+					lcdPosition(lcd, 4, 1);
+					lcdPuts(lcd, "desligado");
+					printf("Luz garagem: desligado.\n");
+				
+				}
 				//atualizarMongo("garagem_toggle", 1, comp.garagem.estado_atual);
 				ALTERACAO_LOGS = 1;
 			}else if(TEM_MENSAGEM == 4){
@@ -837,12 +851,40 @@ void backlog(){
 			}else if(TEM_MENSAGEM == 5){
 				snprintf (valueAux, 10, "%d", comp.alarme.estado_atual);
 				publishMessage(client, TOPIC_ALARME, valueAux);
+				if(comp.alarme.estado_atual == 1){
+					lcdClear(lcd);
+					lcdPuts(lcd, "Alarme:");
+					lcdPosition(lcd, 4, 1);
+					lcdPuts(lcd, "ligado");
+					printf("Alarme ligado.\n");
+				}else{
+					lcdClear(lcd);
+					lcdPuts(lcd, "Alarme:");
+					lcdPosition(lcd, 4, 1);
+					lcdPuts(lcd, "desligado");
+					printf("Alarme desligado.\n");
+				
+				}
 				//inserirNovoEstadoAlarme(0, 0, 0);
 				//atualizarMongo("alarme_toggle", 1, comp.alarme.estado_atual);
 				ALTERACAO_LOGS = 1;
 			}else if(TEM_MENSAGEM == 6){
 				snprintf (valueAux, 10, "%d", comp.ac.estado_atual);
 				publishMessage(client, TOPIC_ARCONDICIONADO, valueAux);
+				if(comp.ac.estado_atual == 1){
+					lcdClear(lcd);
+					lcdPuts(lcd, "Ar condicionado:");
+					lcdPosition(lcd, 4, 1);
+					lcdPuts(lcd, "ligado");
+					printf("Ar condicionado ligado.\n");
+				}else{
+					lcdClear(lcd);
+					lcdPuts(lcd, "Ar condicionado:");
+					lcdPosition(lcd, 4, 1);
+					lcdPuts(lcd, "desligado");
+					printf("Ar condicionado desligado.\n");
+				
+				}
 				//atualizarMongo("ac_toggle", 1, comp.ac.estado_atual);
 				ALTERACAO_LOGS = 1;				
 			}
