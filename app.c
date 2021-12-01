@@ -134,11 +134,6 @@ typedef struct {
 	int alarme;
 	int porta;
 	int janela;
-	int ligaInterno;
-	int ligaJardim;
-	int ligaGaragem;
-	int ligaAr;
-	int ligaAlarme;
 } EstadosInputs;
 
 typedef struct {
@@ -167,7 +162,7 @@ struct tm *p;
 time_t seconds;
 time_t desligar_em = 0;
 char *str;
-int TEMPERATURA_EXTERNA;
+int TEMPERATURA_EXTERNA, ALTERACAO_LOGS = 0, horarioInicio, dataInicio;
 int maxMinAtivo = 0, defaultRecebido = 0, estadoAnteriorAC = -1;
 Components comp;
 
@@ -315,6 +310,42 @@ void inserirNovoEstadoAlarme(bool peopleAlarm, bool doorsAlert, bool windowsAler
     }
 }*/
 
+void atualizarLogsLocal(){
+	char caractere[2] = ":";
+	char caractere_data[2] = "/";
+	char hora[10];
+	char time2[10];
+	char time3[10];
+	char data[10];
+	char data2[10];
+	char data3[10];
+	FILE *file;
+	time(&seconds);
+	p = localtime(&seconds);
+	
+	snprintf (data, 10, "%d%s", p->tm_mday, caractere_data);
+	snprintf (data2, 10, "%d%s", p->tm_mon, caractere_data);
+	snprintf (data3, 10, "%d", p->tm_year + 1900);
+	strcat(data, data2);
+	strcat(data, data3);
+
+    snprintf (hora, 10, "%d%s", p->tm_hour, caractere);
+	snprintf (time2, 10, "%d%s", p->tm_min, caractere);
+	snprintf (time3, 10, "%d", p->tm_sec);
+	strcat(hora, time2);
+	strcat(hora, time3);
+
+	if (horarioInicio == p->tm_hour && dataInicio != p->tm_mday){
+        file = fopen("logs.csv", "w");
+        fprintf(file, "%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s\n", "Data", "Hora", "Ar Condicionado Toggle", "Ar Condicionado Valor Atual", "Ar Condicionado Temperatura Max", "Ar Condicionado Temperatura Min", "Ar Condicionado Tempo Ausencia Pessoas", "Ar Condicionado Reset", "Jardim Toggle", "Jardim Horario Max", "Jardim Horario Min", "Garagem Toggle", "Garagem Horario Max", "Garagem Horario Min", "Interno Toggle", "Alarme Toggle", "Modo Automatico");
+		dataInicio = p->tm_mday;
+	} else {
+        file = fopen("logs.csv", "a");
+    }
+	fprintf(file, "%s;%s;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d\n", data, hora, comp.ac.estado_atual, comp.ac.temp_atual, comp.ac.temp_max, comp.ac.temp_min, comp.ac.tempo_ausencia_pessoas, comp.ac.alterar_operacao_default, comp.jardim.estado_atual, comp.jardim.hora_maxima, comp.jardim.hora_minima, comp.garagem.estado_atual, comp.garagem.hora_maxima, comp.garagem.hora_minima, comp.luzInterna.estado_atual, comp.alarme.estado_atual, comp.automacaoTOGGLE);
+	fclose(file);
+}
+
 void finishConnection(MQTTClient client){
 	/*bson_destroy(query);
     bson_destroy(doc);
@@ -354,6 +385,7 @@ void alarme(bool temPessoas, bool portasAbertas, bool janelasAbertas, bool alarm
 		
 		//inserirNovoEstadoAlarme(temPessoas, portasAbertas, janelasAbertas);
 		//atualizarMongo("alarme_toggle", 1, comp.alarme.estado_atual);
+		ALTERACAO_LOGS = 1;
 
 		snprintf (valueAux, 10, "%d", comp.alarme.estado_atual);
 		printf("%s\n\n", valueAux);
@@ -391,6 +423,7 @@ void iluminacaoAmbientesInternos(bool temPessoas){
 		}
 			
 		//atualizarMongo("interno_toggle", 1, comp.luzInterna.estado_atual);
+		ALTERACAO_LOGS = 1;
 
 		snprintf (valueAux, 10, "%d", comp.luzInterna.estado_atual);
 		printf("%s\n\n", valueAux);
@@ -427,6 +460,7 @@ void iluminacaoGaragem(int horaAtual, bool temPessoas){
 		}
 
 		//atualizarMongo("garagem_toggle", 1, comp.garagem.estado_atual);
+		ALTERACAO_LOGS = 1;
 		snprintf (valueAux, 10, "%d", comp.garagem.estado_atual);
 		printf("%s\n\n", valueAux);
 		publishMessage(client, TOPIC_ILUMINACAO_GARAGEM, valueAux);		
@@ -461,6 +495,7 @@ void iluminacaoJardim(int horaAtual){
 		}
 
 		//atualizarMongo("jardim_toggle", 1, comp.jardim.estado_atual);
+		ALTERACAO_LOGS = 1;
 		snprintf (valueAux, 10, "%d", comp.jardim.estado_atual);
 		printf("%s\n\n", valueAux);
 		publishMessage(client, TOPIC_ILUMINACAO_JARDIM, valueAux);
@@ -479,18 +514,21 @@ int arCondicionado(bool temPessoas){
 	if(!comp.ac.estado_atual && temPessoas){
 		comp.ac.estado_atual = true;
 		//atualizarMongo("ac_toggle", 1, 1);
+		ALTERACAO_LOGS = 1;
 		snprintf (valueAux, 10, "%d", comp.ac.estado_atual);
 		publishMessage(client, TOPIC_ARCONDICIONADO, valueAux);
 	}
 	if(comp.ac.estado_atual && comp.ac.alterar_operacao_default){
 		if( comp.ac.temp_atual < comp.ac.temp_min || comp.ac.temp_atual > comp.ac.temp_max ){
 			//atualizarMongo("ac_toggle", 1, 0);
+			ALTERACAO_LOGS = 1;
 			return 1;
 
 		}
 	} else {
 		if(comp.ac.estado_atual && comp.ac.temp_atual >= 17){
 			//atualizarMongo("ac_toggle", 1, 0);
+			ALTERACAO_LOGS = 1;
 			return 1;
 		}
 	}
@@ -500,6 +538,7 @@ int arCondicionado(bool temPessoas){
 	}
 	if(estadoAnteriorAC != comp.ac.estado_atual && temPessoas){
 		//atualizarMongo("ac_toggle", 1, comp.ac.estado_atual);
+		ALTERACAO_LOGS = 1;
 		snprintf (valueAux, 10, "%d", comp.ac.estado_atual);
 		publishMessage(client, TOPIC_ARCONDICIONADO, valueAux);
 	}
@@ -562,6 +601,7 @@ void verificarArCondicionado(int returnAC){
 		snprintf (valueAux, 10, "%d", comp.ac.estado_atual);
 		publishMessage(client, TOPIC_ARCONDICIONADO, valueAux);
 		//atualizarMongo("ac_toggle", 1, comp.ac.estado_atual);
+		ALTERACAO_LOGS = 1;
 	}
 }
 
@@ -750,62 +790,76 @@ void backlog(){
 				snprintf(valueAux, 10, "%d", comp.automacaoTOGGLE);
 				publishMessage(client, TOPIC_AUTOMATIC_MODE_VALOR, valueAux);
 				//atualizarMongo("automatic_mode", 0, comp.automacaoTOGGLE);
+				ALTERACAO_LOGS = 1;
 			}else if(TEM_MENSAGEM == 2){
 				snprintf (valueAux, 10, "%d", comp.jardim.estado_atual);
 				publishMessage(client, TOPIC_ILUMINACAO_JARDIM, valueAux);
 				//atualizarMongo("jardim_toggle", 1, comp.jardim.estado_atual);
+				ALTERACAO_LOGS = 1;
 				printf("VALOR JARDIM %d", comp.jardim.estado_atual);
 			}else if(TEM_MENSAGEM == 3){
 				snprintf (valueAux, 10, "%d", comp.garagem.estado_atual);
 				publishMessage(client, TOPIC_ILUMINACAO_GARAGEM, valueAux);
 				//atualizarMongo("garagem_toggle", 1, comp.garagem.estado_atual);
+				ALTERACAO_LOGS = 1;
 			}else if(TEM_MENSAGEM == 4){
 				snprintf (valueAux, 10, "%d", comp.luzInterna.estado_atual);
 				publishMessage(client, TOPIC_ILUMINACAO_INTERNO, valueAux);
 				//atualizarMongo("interno_toggle", 1, comp.luzInterna.estado_atual);
+				ALTERACAO_LOGS = 1;
 			}else if(TEM_MENSAGEM == 5){
 				snprintf (valueAux, 10, "%d", comp.alarme.estado_atual);
 				publishMessage(client, TOPIC_ALARME, valueAux);
 				//inserirNovoEstadoAlarme(0, 0, 0);
 				//atualizarMongo("alarme_toggle", 1, comp.alarme.estado_atual);
+				ALTERACAO_LOGS = 1;
 			}else if(TEM_MENSAGEM == 6){
 				snprintf (valueAux, 10, "%d", comp.ac.estado_atual);
 				publishMessage(client, TOPIC_ARCONDICIONADO, valueAux);
-				//atualizarMongo("ac_toggle", 1, comp.ac.estado_atual);				
+				//atualizarMongo("ac_toggle", 1, comp.ac.estado_atual);
+				ALTERACAO_LOGS = 1;				
 			}
 		}else {
 			if(TEM_MENSAGEM== 7){
 			snprintf (valueAux, 10, "%d", comp.ac.temp_max);
 			publishMessage(client, TOPIC_ARCONDICIONADO_MAX, valueAux);			
 			//atualizarMongo("ac_temp_max", 0, comp.ac.temp_max);
+			ALTERACAO_LOGS = 1;
 			}else if(TEM_MENSAGEM== 8){
 				snprintf (valueAux, 10, "%d", comp.ac.temp_min);
 				publishMessage(client, TOPIC_ARCONDICIONADO_MIN, valueAux);
 				//atualizarMongo("ac_temp_min", 0, comp.ac.temp_min);
+				ALTERACAO_LOGS = 1;
 			}else if(TEM_MENSAGEM== 9){
 				snprintf (valueAux, 10, "%d", comp.ac.alterar_operacao_default);
 				publishMessage(client, TOPIC_AC_RESET, valueAux);
 				//atualizarMongo("ac_reset", 1, comp.ac.alterar_operacao_default);
+				ALTERACAO_LOGS = 1;
 			}else if(TEM_MENSAGEM== 10){
 				snprintf (valueAux, 10, "%d", comp.ac.tempo_ausencia_pessoas);
 				publishMessage(client, TOPIC_ARCONDICIONADO_AUSENCIA_PESSOAS, valueAux);
 				//atualizarMongo("ac_tempo_ausencia_pessoas", 0, comp.ac.tempo_ausencia_pessoas);
+				ALTERACAO_LOGS = 1;
 			}else if(TEM_MENSAGEM== 11){
 				snprintf (valueAux, 10, "%d", comp.jardim.hora_maxima);
 				publishMessage(client, TOPIC_ILUMINACAO_JARDIM_MIN, valueAux);
 				//atualizarMongo("jardim_hora_max", 0, comp.jardim.hora_maxima);
+				ALTERACAO_LOGS = 1;
 			}else if(TEM_MENSAGEM== 12){
 				snprintf (valueAux, 10, "%d", comp.jardim.hora_minima);
 				publishMessage(client, TOPIC_ILUMINACAO_JARDIM_MAX, valueAux);
 				//atualizarMongo("jardim_hora_min", 0, comp.jardim.hora_minima);
+				ALTERACAO_LOGS = 1;
 			}else if(TEM_MENSAGEM== 13){
 				snprintf (valueAux, 10, "%d", comp.garagem.hora_maxima);
 				publishMessage(client, TOPIC_ILUMINACAO_GARAGEM_MAX, valueAux);
 				//atualizarMongo("garagem_hora_max", 0, comp.garagem.hora_maxima);
+				ALTERACAO_LOGS = 1;
 			}else if(TEM_MENSAGEM== 14){
 				snprintf (valueAux, 10, "%d", comp.garagem.hora_minima);
 				publishMessage(client, TOPIC_ILUMINACAO_GARAGEM_MIN, valueAux);
 				//atualizarMongo("garagem_hora_min", 0, comp.garagem.hora_minima);
+				ALTERACAO_LOGS = 1;
 			}
 		}
 		TEM_MENSAGEM= -1;
@@ -898,6 +952,8 @@ int main() {
 	bool estadoCronometroAC = false;
 	bool temPessoas_ALARME = false, temPessoas_GARAGEM = false, temPessoas_AC = false, temPessoas_INTERNO = false, portasAbertas_ALARME = false, janelasAbertas_ALARME = false;
 	char valueAux[10];
+	horarioInicio = p->tm_hour;
+	dataInicio = p->tm_mday;
 	comp.ac.estado_atual = 0;
 	comp.ac.temp_atual = 17;
 	comp.ac.temp_max = 24;
@@ -929,13 +985,6 @@ int main() {
 			comp.estados_inputs.janela = getInput(!BUTTON_PORTA);
 		//////////////////////////////////////////////////////////////////////////
 
-		// entradas de input de voz
-			comp.estados_inputs.ligaAlarme = 1;
-			comp.estados_inputs.ligaAr = 1;
-			comp.estados_inputs.ligaGaragem = 1;
-			comp.estados_inputs.ligaInterno = 1;
-			comp.estados_inputs.ligaJardim = 1;
-		//
 
 			temPessoas_ALARME = (comp.estados_inputs.sala == 1 || comp.estados_inputs.garagem == 1|| comp.estados_inputs.interno == 1);
 			portasAbertas_ALARME = comp.estados_inputs.porta == 1;
@@ -984,6 +1033,10 @@ int main() {
 					desligar_em = agora + comp.ac.tempo_ausencia_pessoas*60;
 					printf("Ar condicionado ficará ligado por mais %d minutos e sera desligado pela ausencia de pessoas no ambiente.", comp.ac.tempo_ausencia_pessoas);
 				}
+			}
+			if(ALTERACAO_LOGS){
+				atualizarLogsLocal();
+				ALTERACAO_LOGS = 0;
 			}
 		}
 		backlog();
