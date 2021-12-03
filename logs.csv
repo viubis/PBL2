@@ -1,1 +1,9 @@
-Data;Hora;Ar Condicionado Toggle;Ar Condicionado Valor Atual;Ar Condicionado Temperatura Max;Ar Condicionado Temperatura Min;Ar Condicionado Tempo Ausencia Pessoas;Ar Condicionado Reset;Jardim Toggle;Jardim Horario Max;Jardim Horario Min;Garagem Toggle;Garagem Horario Max;Garagem Horario Min;Interno Toggle;Alarme Toggle;Modo Automatico
+Data;Hora;Ar Condicionado Toggle;Ar Condicionado Valor Atual;Ar Condicionado Temperatura Max;Ar Condicionado Temperatura Min;Ar Condicionado Tempo Ausencia Pessoas;Ar Condicionado Reset;Jardim Toggle;Jardim Horario Max;Jardim Horario Min;Garagem Toggle;Garagem Horario Max;Garagem Horario Min;Interno Toggle;Alarme Toggle;Alarme Ligado;Modo Automatico
+2/11/2021;20:23:38;1;17;24;18;2;0;1;23;18;1;6;18;1;1;1;1
+2/11/2021;20:24:14;1;17;24;18;2;0;1;23;18;1;6;18;1;1;1;1
+2/11/2021;20:24:14;1;17;24;18;2;0;1;23;18;1;6;18;1;0;0;1
+2/11/2021;20:24:15;1;17;24;18;2;0;1;23;18;1;6;18;1;1;1;1
+2/11/2021;20:24:16;1;17;24;18;2;0;1;23;18;1;6;18;0;0;0;1
+2/11/2021;20:24:17;1;17;24;18;2;0;1;23;18;0;6;18;0;1;1;1
+2/11/2021;20:24:17;1;17;24;18;2;0;1;23;18;1;6;18;0;1;1;1
+2/11/2021;20:24:18;1;17;24;18;2;0;1;23;18;1;6;18;1;1;1;1

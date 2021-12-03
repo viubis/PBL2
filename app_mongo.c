@@ -4,7 +4,7 @@
 #include "MQTTClient.h"
 #include <unistd.h>
 // #include <wiringPi.h>
-#include <lcd.h>
+// #include <lcd.h>
 #include <time.h>
 #include <stdbool.h>
 #include <locale.h>
@@ -15,16 +15,16 @@
 #include <stdbool.h>
 #include <time.h>
 
-#define ADDRESS     ""
+#define ADDRESS     "ssl://b0b1b4c6d9b148d7bc0f4c535f24c67a.s1.eu.hivemq.cloud:8883"
 #define ID          "RASPBERRY"
 
 #define QOS         2
 #define TIMEOUT     10000L
 #define KEEP_ALIVE  60
-#define CLIENT_DB	""
-#define DATABASE_DB					""
-#define COLLECTION_LOG_ALARMS_DB	""
-#define COLLECTION_LOG_TOPICS_DB	""
+#define CLIENT_DB	"mongodb+srv://mqttuefs20212:mqttuefs20212@historicalarmlogs.qjple.mongodb.net/myFirstDatabase?retryWrites=true&w=majority"
+#define DATABASE_DB					"historic_logs"
+#define COLLECTION_LOG_ALARMS_DB	"alarm_logs"
+#define COLLECTION_LOG_TOPICS_DB	"last_logs_all_topics"
 
 
 volatile MQTTClient_deliveryToken deliveredtoken;
@@ -201,6 +201,37 @@ void atualizarMongo(char key[], int type, int value){
     } else if(type == 1){
 		doc = BCON_NEW ("$set", "{", "_id",BCON_UTF8("6164a7695a312709b0574e52"), key,BCON_BOOL(value), "}");
     }
+	/*if(strcmp(key, "ac_toggle") == 0){
+		doc = BCON_NEW ("$set", "{", "_id",BCON_UTF8("6164a7695a312709b0574e52"), key,BCON_BOOL(value), "}");
+    } else if(strcmp(key, "ac_valor_atual") == 0){
+		doc = BCON_NEW ("$set", "{", "_id",BCON_UTF8("6164a7695a312709b0574e52"), key,BCON_INT32(value), "}");
+    } else if(strcmp(key, "ac_temp_max") == 0){
+		doc = BCON_NEW ("$set", "{", "_id",BCON_UTF8("6164a7695a312709b0574e52"), key,BCON_INT32(value), "}");
+    } else if(strcmp(key, "ac_temp_min") == 0){
+		doc = BCON_NEW ("$set", "{", "_id",BCON_UTF8("6164a7695a312709b0574e52"), key,BCON_INT32(value), "}");
+    } else if(strcmp(key, "ac_tempo_ausencia_pessoas") == 0){
+		doc = BCON_NEW ("$set", "{", "_id",BCON_UTF8("6164a7695a312709b0574e52"), key,BCON_INT32(value), "}");
+    } else if(strcmp(key, "ac_reset") == 0){
+		doc = BCON_NEW ("$set", "{", "_id",BCON_UTF8("6164a7695a312709b0574e52"), key,BCON_BOOL(value), "}");
+    } else if(strcmp(key, "jardim_toggle") == 0){
+		doc = BCON_NEW ("$set", "{", "_id",BCON_UTF8("6164a7695a312709b0574e52"), key,BCON_BOOL(value), "}");
+    } else if(strcmp(key, "jardim_hora_max") == 0){
+		doc = BCON_NEW ("$set", "{", "_id",BCON_UTF8("6164a7695a312709b0574e52"), key,BCON_INT32(value), "}");
+    } else if(strcmp(key, "jardim_hora_min") == 0){
+		doc = BCON_NEW ("$set", "{", "_id",BCON_UTF8("6164a7695a312709b0574e52"), key,BCON_INT32(value), "}");
+    } else if(strcmp(key, "garagem_toggle") == 0){
+		doc = BCON_NEW ("$set", "{", "_id",BCON_UTF8("6164a7695a312709b0574e52"), key,BCON_BOOL(value), "}");
+    } else if(strcmp(key, "garagem_hora_max") == 0){
+		doc = BCON_NEW ("$set", "{", "_id",BCON_UTF8("6164a7695a312709b0574e52"), key,BCON_INT32(value), "}");
+    } else if(strcmp(key, "garagem_hora_min") == 0){
+		doc = BCON_NEW ("$set", "{", "_id",BCON_UTF8("6164a7695a312709b0574e52"), key,BCON_INT32(value), "}");
+    } else if(strcmp(key, "interno_toggle") == 0){
+		doc = BCON_NEW ("$set", "{", "_id",BCON_UTF8("6164a7695a312709b0574e52"), key,BCON_BOOL(value), "}");
+    } else if(strcmp(key, "alarme_toggle") == 0){
+		doc = BCON_NEW ("$set", "{", "_id",BCON_UTF8("6164a7695a312709b0574e52"), key,BCON_BOOL(value), "}");
+    } else if(strcmp(key, "automatic_mode") == 0){
+		doc = BCON_NEW ("$set", "{", "_id",BCON_UTF8("6164a7695a312709b0574e52"), key,BCON_BOOL(value), "}");
+    }*/
 	int b = mongoc_collection_update_one(collection_topics,query,doc,NULL,NULL,&error);
 	if(!b){
 		printf("%s\n",error.message);
@@ -356,10 +387,10 @@ void alarme(bool temPessoas, bool portasAbertas, bool janelasAbertas){
 		printf("Atual: %d\n", ativo);
 		//Aqui ele vai dizer que alterou
 		if(ativo == 1){
-			lcdClear(lcd);
-    		lcdPuts(lcd, "Alarme:");
-    		lcdPosition(lcd, 4, 1);
-    		lcdPuts(lcd, "Ativo");
+			// lcdClear(lcd);
+    		// lcdPuts(lcd, "Alarme:");
+    		// lcdPosition(lcd, 4, 1);
+    		// lcdPuts(lcd, "Ativo");
 			printf("Sai­da do alarme por PRESENCA DE INTRUSOS, PORTAS E/OU JANELAS ABERTAS.\n");
 		}
 		
@@ -389,16 +420,16 @@ void iluminacaoAmbientesInternos(bool temPessoas){
 
 		//Aqui ele vai dizer que alterou
 		if(ativo == 1){
-			lcdClear(lcd);
-    		lcdPuts(lcd, "Luz interna:");
-    		lcdPosition(lcd, 4, 1);
-    		lcdPuts(lcd, "Ativo");
+			// lcdClear(lcd);
+    		// lcdPuts(lcd, "Luz interna:");
+    		// lcdPosition(lcd, 4, 1);
+    		// lcdPuts(lcd, "Ativo");
 			printf("Iluminacao do ambiente interno ligada.\n");
 		}else {
-			lcdClear(lcd);
-    		lcdPuts(lcd, "Luz interna:");
-    		lcdPosition(lcd, 4, 1);
-    		lcdPuts(lcd, "Desligada");
+			// lcdClear(lcd);
+    		// lcdPuts(lcd, "Luz interna:");
+    		// lcdPosition(lcd, 4, 1);
+    		// lcdPuts(lcd, "Desligada");
 			printf("Iluminaco do ambiente interno desligada.\n");
 		}
 			
@@ -425,16 +456,16 @@ void iluminacaoGaragem(int horaAtual, bool temPessoas){
 		comp.garagem.estado_atual = ativo;
 
 		if(ativo == 1){
-			lcdClear(lcd);
-    		lcdPuts(lcd, "Garagem:");
-    		lcdPosition(lcd, 4, 1);
-    		lcdPuts(lcd, "luz ativa");
+			// lcdClear(lcd);
+    		// lcdPuts(lcd, "Garagem:");
+    		// lcdPosition(lcd, 4, 1);
+    		// lcdPuts(lcd, "luz ativa");
 			printf("Iluminacao do ambiente ligada.\n");
 		}else {
-			lcdClear(lcd);
-    		lcdPuts(lcd, "Garagem:");
-    		lcdPosition(lcd, 4, 1);
-    		lcdPuts(lcd, "luz desativada");
+			// lcdClear(lcd);
+    		// lcdPuts(lcd, "Garagem:");
+    		// lcdPosition(lcd, 4, 1);
+    		// lcdPuts(lcd, "luz desativada");
 			printf("Iluminaco do ambiente desligada.\n");
 		}
 
@@ -460,16 +491,16 @@ void iluminacaoJardim(int horaAtual){
 		comp.jardim.estado_atual = ativo;
 
 		if(ativo == 1){
-			lcdClear(lcd);
-    		lcdPuts(lcd, "Luz jardim:");
-    		lcdPosition(lcd, 4, 1);
-    		lcdPuts(lcd, "Ativa");
+			// lcdClear(lcd);
+    		// lcdPuts(lcd, "Luz jardim:");
+    		// lcdPosition(lcd, 4, 1);
+    		// lcdPuts(lcd, "Ativa");
 			printf("Iluminacao do Jardim ligada.\n");
 		}else {
-			lcdClear(lcd);
-    		lcdPuts(lcd, "Luz jardim:");
-    		lcdPosition(lcd, 4, 1);
-    		lcdPuts(lcd, "Desligado");
+			// lcdClear(lcd);
+    		// lcdPuts(lcd, "Luz jardim:");
+    		// lcdPosition(lcd, 4, 1);
+    		// lcdPuts(lcd, "Desligado");
 			printf("Iluminacao do Jardim desligada.\n");
 		}
 
@@ -536,10 +567,10 @@ void verificarArCondicionado(int returnAC){
 	char valueAux[10];
 
 	if(returnAC == 2){
-		lcdClear(lcd);
-    	lcdPuts(lcd, "AR:");
-    	lcdPosition(lcd, 4, 1);
-		lcdPuts(lcd, "Desligado");
+		// lcdClear(lcd);
+    	// lcdPuts(lcd, "AR:");
+    	// lcdPosition(lcd, 4, 1);
+		// lcdPuts(lcd, "Desligado");
 		printf("Ar condicionado desligado devido a ausência de pessoas.\n");
 		comp.ac.estado_atual = 0;
 		prox = 0;
@@ -548,16 +579,16 @@ void verificarArCondicionado(int returnAC){
 		if( comp.ac.temp_atual >= comp.ac.temp_min || comp.ac.temp_atual <= comp.ac.temp_max ) {
 			comp.ac.estado_atual = 1;
 			prox = 1;
-			lcdClear(lcd);
-			lcdPuts(lcd, "AR:");
-			lcdPosition(lcd, 4, 1);
-			lcdPuts(lcd, "Ligado");
+			// lcdClear(lcd);
+			// lcdPuts(lcd, "AR:");
+			// lcdPosition(lcd, 4, 1);
+			// lcdPuts(lcd, "Ligado");
 			printf("Ar condicionado ligado.\n");
 		} else {
-			lcdClear(lcd);
-    		lcdPuts(lcd, "AR:");
-    		lcdPosition(lcd, 4, 1);
-			lcdPuts(lcd, "Desligado");
+			// lcdClear(lcd);
+    		// lcdPuts(lcd, "AR:");
+    		// lcdPosition(lcd, 4, 1);
+			// lcdPuts(lcd, "Desligado");
 			printf("Ar condicionado desligado.\n");
 			comp.ac.estado_atual = 0;
 			prox = 0;
@@ -566,16 +597,16 @@ void verificarArCondicionado(int returnAC){
 		if(comp.ac.estado_atual && comp.ac.temp_atual < 17) {
 			comp.ac.estado_atual = 1;
 			prox = 1;
-			lcdClear(lcd);
-			lcdPuts(lcd, "AR:");
-			lcdPosition(lcd, 4, 1);
-			lcdPuts(lcd, "Ligado");
+			// lcdClear(lcd);
+			// lcdPuts(lcd, "AR:");
+			// lcdPosition(lcd, 4, 1);
+			// lcdPuts(lcd, "Ligado");
 			printf("Ar condicionado ligado.\n");
 		} else {
-			lcdClear(lcd);
-    		lcdPuts(lcd, "AR:");
-    		lcdPosition(lcd, 4, 1);
-			lcdPuts(lcd, "Desligado");
+			// lcdClear(lcd);
+    		// lcdPuts(lcd, "AR:");
+    		// lcdPosition(lcd, 4, 1);
+			// lcdPuts(lcd, "Desligado");
 			printf("Ar condicionado desligado.\n");
 			comp.ac.estado_atual = 0;
 			prox = 0;
@@ -838,8 +869,8 @@ int main() {
 	//...................................................................
 	//... USERNAME E PASSWORD
 	//...................................................................
-  conn_opts.username = "";
-  conn_opts.password = "";
+  conn_opts.username = "mqttuefs20212";
+  conn_opts.password = ".h.#q4WEcGk(NAvF";
 
 	rc = MQTTClient_connect(client, &conn_opts);
 	if (rc != MQTTCLIENT_SUCCESS) {
