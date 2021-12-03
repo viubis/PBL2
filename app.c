@@ -908,9 +908,9 @@ void backlog(){
 			snprintf (valueAux, 10, "%d", comp.ac.temp_max);
 			publishMessage(client, TOPIC_ARCONDICIONADO_MAX, valueAux);		
 			lcdClear(lcd);
-			lcdPuts(lcd, "Ar condicionado:");
+			lcdPuts(lcd, "Ar:");
 			lcdPosition(lcd, 4, 1);
-			lcdPuts(lcd, "Temp. max aumentou");
+			lcdPuts(lcd, "Temp max aumentou");
 			printf("Ar condicionado temp max aumentou.\n");	
 			//atualizarMongo("ac_temp_max", 0, comp.ac.temp_max);
 			ALTERACAO_LOGS = 1;
@@ -918,9 +918,9 @@ void backlog(){
 				snprintf (valueAux, 10, "%d", comp.ac.temp_min);
 				publishMessage(client, TOPIC_ARCONDICIONADO_MIN, valueAux);
 				lcdClear(lcd);
-				lcdPuts(lcd, "Ar condicionado:");
+				lcdPuts(lcd, "Ar:");
 				lcdPosition(lcd, 4, 1);
-				lcdPuts(lcd, "Temp. min diminuiu");
+				lcdPuts(lcd, "Temp min diminuiu");
 				printf("Ar condicionado temp min diminuiu.\n");	
 				//atualizarMongo("ac_temp_min", 0, comp.ac.temp_min);
 				ALTERACAO_LOGS = 1;
@@ -940,7 +940,7 @@ void backlog(){
 				lcdClear(lcd);
 				lcdPuts(lcd, "Jardim:");
 				lcdPosition(lcd, 4, 1);
-				lcdPuts(lcd, "horario min diminuiu");
+				lcdPuts(lcd, "horario min");
 				printf("Jardim horario min diminuiu.\n");		
 				//atualizarMongo("jardim_hora_max", 0, comp.jardim.hora_maxima);						
 				ALTERACAO_LOGS = 1;
@@ -950,7 +950,7 @@ void backlog(){
 				lcdClear(lcd);
 				lcdPuts(lcd, "Jardim:");
 				lcdPosition(lcd, 4, 1);
-				lcdPuts(lcd, "horario max aumentou");
+				lcdPuts(lcd, "horario max");
 				printf("Jardim horario max aumentou.\n");			
 				//atualizarMongo("jardim_hora_min", 0, comp.jardim.hora_minima);			
 				ALTERACAO_LOGS = 1;
@@ -960,7 +960,7 @@ void backlog(){
 				lcdClear(lcd);
 				lcdPuts(lcd, "Garagem:");
 				lcdPosition(lcd, 4, 1);
-				lcdPuts(lcd, "horario max aumentou");
+				lcdPuts(lcd, "horario max");
 				printf("Garagem horario max aumentou.\n");	
 				//atualizarMongo("garagem_hora_max", 0, comp.garagem.hora_maxima);
 				ALTERACAO_LOGS = 1;
@@ -970,7 +970,7 @@ void backlog(){
 				lcdClear(lcd);
 				lcdPuts(lcd, "Garagem:");
 				lcdPosition(lcd, 4, 1);
-				lcdPuts(lcd, "horario min diminuiu");
+				lcdPuts(lcd, "horario min");
 				printf("Garagem horario min diminuiu.\n");	
 				//atualizarMongo("garagem_hora_min", 0, comp.garagem.hora_minima);
 				ALTERACAO_LOGS = 1;
