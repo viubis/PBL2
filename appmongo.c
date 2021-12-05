@@ -12,15 +12,16 @@
 #include <bson/bson.h>
 #include <json-c/json.h>
 
-#define ADDRESS     ""
+#define ADDRESS     "ssl://b0b1b4c6d9b148d7bc0f4c535f24c67a.s1.eu.hivemq.cloud:8883"
 #define ID          "RASPBERRY"
 
 #define QOS         2
 #define TIMEOUT     10000L
 #define KEEP_ALIVE  60
-#define CLIENT_DB	""
-#define DATABASE_DB					""
-#define COLLECTION_LOG_ALARMS_DB	""
+#define CLIENT_DB	"mongodb+srv://mqttuefs20212:mqttuefs20212@historicalarmlogs.qjple.mongodb.net/myFirstDatabase?retryWrites=true&w=majority"
+#define DATABASE_DB					"historic_logs"
+#define COLLECTION_LOG_ALARMS_DB	"alarm_logs"
+#define COLLECTION_LOG_TOPICS_DB	"last_logs_all_topics"
 #define COLLECTION_LOG_TOPICS_DB	""
 
 
@@ -1034,8 +1035,8 @@ int main() {
 	//...................................................................
 	//... USERNAME E PASSWORD
 	//...................................................................
-  conn_opts.username = "";
-  conn_opts.password = "";
+  conn_opts.username = "mqttuefs20212";
+  conn_opts.password = ".h.#q4WEcGk(NAvF";
 
 	rc = MQTTClient_connect(client, &conn_opts);
 	if (rc != MQTTCLIENT_SUCCESS) {

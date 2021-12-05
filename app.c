@@ -12,7 +12,7 @@
 #include <bson/bson.h>
 #include <json-c/json.h>*/
 
-#define ADDRESS     ""
+#define ADDRESS     "ssl://b0b1b4c6d9b148d7bc0f4c535f24c67a.s1.eu.hivemq.cloud:8883"
 #define ID          "RASPBERRY"
 
 #define QOS         2
@@ -1028,8 +1028,8 @@ int main() {
 	//...................................................................
 	//... USERNAME E PASSWORD
 	//...................................................................
-  conn_opts.username = "";
-  conn_opts.password = "";
+  conn_opts.username = "mqttuefs20212";
+  conn_opts.password = ".h.#q4WEcGk(NAvF";
 
 	rc = MQTTClient_connect(client, &conn_opts);
 	if (rc != MQTTCLIENT_SUCCESS) {
